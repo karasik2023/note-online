@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Умный редактор конспектов</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --text-color: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg-color: #f8f9fa;
+            --bg-white: #ffffff;
+            --border-color: #e1e8ed;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--bg-white);
+            padding: 40px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal h2 {
+            margin-bottom: 25px;
+            text-align: center;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--bg-white);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--text-light);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #6c7a7d;
+        }
+
+        .btn-danger {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .form-footer {
+            margin-top: 25px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .form-link {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .form-link:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        /* Основное приложение */
+        #mainApp {
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+            background: var(--bg-white);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--secondary-color);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tools {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tool-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .profile:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 75px);
+            background: var(--bg-white);
+            overflow: hidden;
+        }
+
+        /* Боковая панель */
+        .sidebar {
+            width: 350px;
+            background: var(--bg-white);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-white);
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: var(--bg-white);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            padding-right: 40px;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .clear-search {
+            position: absolute;
+            right: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 5px;
+            display: none;
+            transition: color 0.3s ease;
+        }
+
+        .clear-search:hover {
+            color: var(--accent-color);
+        }
+
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+            background: var(--bg-color);
+        }
+
+        .note-item {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: var(--bg-white);
+            margin: 5px 10px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            overflow: hidden;
+        }
+
+        .note-item:hover {
+            border-color: var(--primary-color);
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .note-item.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+            box-shadow: var(--shadow);
+        }
+
+        .note-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+            font-size: 16px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+
+        .note-preview {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+
+        .note-date {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .delete-note {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .note-item:hover .delete-note {
+            opacity: 1;
+        }
+
+        /* Редактор */
+        .editor {
+            flex: 1;
+            background: var(--bg-white);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            /* Разрешаем скролл для редактора */
+            overflow: hidden;
+        }
+
+        /* Экран приветствия */
+        .welcome-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            font-size: 120px;
+            margin-bottom: 30px;
+            opacity: 0.7;
+        }
+
+        .welcome-title {
+            font-size: 2.5em;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2em;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .welcome-btn {
+            padding: 20px 40px;
+            font-size: 1.3em;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .welcome-btn:hover {
+            background: #2980b9;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(52, 152, 219, 0.4);
+        }
+
+        .editor-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-white);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .editor-title {
+            border: none;
+            font-size: 24px;
+            font-weight: 700;
+            padding: 10px;
+            width: 70%;
+            outline: none;
+            background: transparent;
+            color: var(--secondary-color);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            min-width: 0;
+        }
+
+        .editor-title::placeholder {
+            color: #bdc3c7;
+        }
+
+        .editor-toolbar {
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            padding: 8px;
+            background: var(--bg-white);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .format-btn {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .format-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .format-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .font-select, .size-select {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-white);
+            font-size: 14px;
+            min-width: 130px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .font-select:focus, .size-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .color-picker {
+            width: 45px;
+            height: 40px;
+            padding: 3px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-white);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .divider {
+            width: 1px;
+            height: 30px;
+            background: var(--border-color);
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+
+        /* Контейнер для контента редактора */
+        .editor-content-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .editor-content {
+            flex: 1;
+            padding: 40px;
+            outline: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+            line-height: 1.8;
+            font-size: 16px;
+            background: var(--bg-white);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+            white-space: normal;
+            max-width: 100%;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            min-height: 200px;
+        }
+
+        /* Стили для скроллбара в редакторе */
+        .editor-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .editor-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .editor-content::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .editor-content::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .editor-content:empty:before {
+            content: "Начните вводить текст вашего конспекта...";
+            color: #bdc3c7;
+            font-style: italic;
+        }
+
+        /* Стили для контента редактора */
+        .editor-content h1 {
+            font-size: 2.5em;
+            color: var(--secondary-color);
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary-color);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .editor-content h2 {
+            font-size: 2em;
+            color: var(--secondary-color);
+            margin: 25px 0 15px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .editor-content h3 {
+            font-size: 1.5em;
+            color: var(--secondary-color);
+            margin: 20px 0 10px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .editor-content p {
+            margin: 15px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .editor-content blockquote {
+            border-left: 4px solid var(--primary-color);
+            margin: 20px 0;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-style: italic;
+            border-radius: 0 8px 8px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .editor-content code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .editor-content pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #34495e;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .editor-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        .editor-content th, .editor-content td {
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            text-align: left;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .editor-content th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .editor-content tr:nth-child(even) {
+            background: var(--bg-color);
+        }
+
+        /* Изображения */
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin: 15px;
+            vertical-align: top;
+            transition: all 0.3s ease;
+            max-width: 100%;
+        }
+
+        .image-container.left {
+            float: left;
+            margin-right: 20px;
+            margin-left: 0;
+            max-width: calc(50% - 20px);
+        }
+
+        .image-container.right {
+            float: right;
+            margin-left: 20px;
+            margin-right: 0;
+            max-width: calc(50% - 20px);
+        }
+
+        .image-container.center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            float: none;
+            max-width: 80%;
+        }
+
+        .editor-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .editor-content img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .editor-content img.selected {
+            box-shadow: 0 0 0 3px var(--primary-color), 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .image-controls {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            display: none;
+            gap: 5px;
+            background: var(--bg-white);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            z-index: 20;
+        }
+
+        .image-container:hover .image-controls {
+            display: flex;
+        }
+
+        .image-control-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .image-control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .image-control-btn.delete {
+            background: var(--accent-color);
+        }
+
+        .alignment-controls {
+            display: none;
+            gap: 5px;
+            margin-left: 15px;
+        }
+
+        .alignment-btn {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .alignment-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .alignment-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Утилиты */
+        .hidden {
+            display: none !important;
+        }
+
+        .info-message {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .status-bar {
+            background: var(--secondary-color);
+            color: white;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .save-indicator {
+            background: var(--success-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            display: none;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 300px;
+            }
+            
+            .editor-toolbar {
+                padding: 10px 15px;
+                gap: 5px;
+            }
+            
+            .toolbar-group {
+                padding: 5px;
+            }
+            
+            .format-btn {
+                padding: 8px 10px;
+                min-width: 35px;
+                height: 35px;
+                font-size: 12px;
+            }
+            
+            .editor-content {
+                padding: 20px;
+            }
+
+            .editor-title {
+                width: 60%;
+            }
+
+            .welcome-title {
+                font-size: 2em;
+            }
+
+            .welcome-subtitle {
+                font-size: 1em;
+            }
+
+            .welcome-btn {
+                padding: 15px 30px;
+                font-size: 1.1em;
+            }
+        }
+
+        /* Анимации */
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Модальные окна авторизации -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>👋 Добро пожаловать!</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="email" class="form-input" placeholder="Ваш email" required id="loginEmail">
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" placeholder="Пароль" required id="loginPassword">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Войти в систему</button>
+            </form>
+            <div class="form-footer">
+                <span>Еще нет аккаунта? </span>
+                <span class="form-link" onclick="showRegister()">Создать новый</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <h2>📝 Регистрация</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Ваше имя" required id="registerName">
+                </div>
+                <div class="form-group">
+                    <input type="email" class="form-input" placeholder="Email" required id="registerEmail">
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" placeholder="Пароль" required id="registerPassword">
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Создать аккаунт</button>
+            </form>
+            <div class="form-footer">
+                <span>Уже есть аккаунт? </span>
+                <span class="form-link" onclick="showLogin()">Войти</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основное приложение -->
+    <div id="mainApp">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">
+                    📚 Умные конспекты
+                </div>
+                <div class="tools">
+                    <button type="button" class="tool-btn" onclick="createNewNote()">
+                        📄 Новый конспект
+                    </button>
+                    <button type="button" class="tool-btn" onclick="manualSave()" id="saveBtn" style="display: none;">
+                        💾 Сохранить
+                    </button>
+                    <button type="button" class="tool-btn btn-danger" onclick="deleteSelectedImage()" 
+                            id="deleteImageBtn" style="display: none;">
+                        🗑️ Удалить изображение
+                    </button>
+                </div>
+            </div>
+            <div class="profile" onclick="logout()">
+                <div class="avatar" id="userAvatar">U</div>
+                <span id="userName">Пользователь</span>
+                <div class="save-indicator" id="saveIndicator">✓ Сохранено</div>
+            </div>
+        </div>
+
+        <div class="main-container">
+            <!-- Боковая панель с конспектами -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <input type="text" class="search-input" placeholder="🔍 Поиск конспектов..." id="searchInput">
+                    <button type="button" class="clear-search" id="clearSearch" title="Очистить поиск">✕</button>
+                </div>
+                <div class="notes-list" id="notesList">
+                    <div class="info-message">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
+                        <div>Загрузка ваших конспектов...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Область редактора -->
+            <div class="editor">
+                <!-- Экран приветствия -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-icon">📚</div>
+                    <h1 class="welcome-title">Добро пожаловать в Умные конспекты!</h1>
+                    <p class="welcome-subtitle">
+                        Создавайте, редактируйте и организуйте свои конспекты с помощью нашего удобного редактора. 
+                        Начните работу, создав новый конспект конспект или редактируйте уже созданный.
+                    </p>
+                    <button class="welcome-btn" onclick="createNewNote()">
+                        📄 Создать новый конспект
+                    </button>
+                </div>
+
+                <!-- Интерфейс редактора (изначально скрыт) -->
+                <div id="editorInterface" style="display: none; height: 100%; flex-direction: column;">
+                    <div class="editor-header">
+                        <input type="text" class="editor-title" placeholder="Введите название конспекта..." id="noteTitle">
+                        <button type="button" class="btn btn-success" onclick="manualSave()">
+                            💾 Сохранить
+                        </button>
+                    </div>
+                    
+                    <!-- Панель инструментов редактора -->
+                    <div class="editor-toolbar">
+                        <!-- Форматирование текста -->
+                        <div class="toolbar-group">
+                            <select class="font-select" onchange="formatText('fontName', this.value)">
+                                <option value="">Шрифт</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                            </select>
+                            
+                            <select class="size-select" onchange="formatText('fontSize', this.value)">
+                                <option value="">Размер</option>
+                                <option value="1">Маленький</option>
+                                <option value="3">Обычный</option>
+                                <option value="5">Большой</option>
+                                <option value="7">Очень большой</option>
+                            </select>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Стили текста -->
+                        <div class="toolbar-group">
+                            <button type="button" class="format-btn" onclick="formatText('bold')" title="Жирный">
+                                <strong>B</strong>
+                            </button>
+                            <button type="button" class="format-btn" onclick="formatText('italic')" title="Курсив">
+                                <em>I</em>
+                            </button>
+                            <button type="button" class="format-btn" onclick="formatText('underline')" title="Подчеркивание">
+                                <u>U</u>
+                            </button>
+                            <button type="button" class="format-btn" onclick="formatText('strikeThrough')" title="Зачеркнутый">
+                                <s>S</s>
+                            </button>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Выравнивание -->
+                        <div class="toolbar-group">
+                            <button type="button" class="format-btn" onclick="formatText('justifyLeft')" title="По левому краю">⬅</button>
+                            <button type="button" class="format-btn" onclick="formatText('justifyCenter')" title="По центру">↔</button>
+                            <button type="button" class="format-btn" onclick="formatText('justifyRight')" title="По правому краю">➡</button>
+                            <button type="button" class="format-btn" onclick="formatText('justifyFull')" title="По ширине">⬌</button>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Списки и отступы -->
+                        <div class="toolbar-group">
+                            <button type="button" class="format-btn" onclick="insertBulletList()" title="Маркированный список">•</button>
+                            <button type="button" class="format-btn" onclick="insertNumberedList()" title="Нумерованный список">1.</button>
+                            <button type="button" class="format-btn" onclick="formatText('outdent')" title="Уменьшить отступ">←</button>
+                            <button type="button" class="format-btn" onclick="formatText('indent')" title="Увеличить отступ">→</button>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Структура -->
+                        <div class="toolbar-group">
+                            <button type="button" class="format-btn" onclick="insertHeading(1)" title="Заголовок 1">H1</button>
+                            <button type="button" class="format-btn" onclick="insertHeading(2)" title="Заголовок 2">H2</button>
+                            <button type="button" class="format-btn" onclick="insertHeading(3)" title="Заголовок 3">H3</button>
+                            <button type="button" class="format-btn" onclick="insertBlockquote()" title="Цитата">❝</button>
+                            <button type="button" class="format-btn" onclick="insertCode()" title="Код">&lt;/&gt;</button>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Дополнительные функции -->
+                        <div class="toolbar-group">
+                            <input type="color" class="color-picker" onchange="formatText('foreColor', this.value)" title="Цвет текста">
+                            <button type="button" class="format-btn" onclick="formatText('removeFormat')" title="Очистить форматирование">✕</button>
+                            <button type="button" class="format-btn" onclick="insertTable()" title="Вставить таблицу">⧉</button>
+                            <button type="button" class="format-btn" onclick="insertLink()" title="Вставить ссылку">🔗</button>
+                        </div>
+
+                        <!-- Контролы для изображений -->
+                        <div class="alignment-controls" id="alignmentControls">
+                            <button type="button" class="alignment-btn active" onclick="setImageAlignment('left')" title="Выровнять слева">⬅️</button>
+                            <button type="button" class="alignment-btn" onclick="setImageAlignment('center')" title="Выровнять по центру">⏺️</button>
+                            <button type="button" class="alignment-btn" onclick="setImageAlignment('right')" title="Выровнять справа">➡️</button>
+                        </div>
+                    </div>
+
+                    <!-- Контейнер для области редактирования -->
+                    <div class="editor-content-container">
+                        <div class="editor-content" contenteditable="true" id="editorContent"></div>
+                    </div>
+
+                    <!-- Статус бар -->
+                    <div class="status-bar">
+                        <div id="statusInfo">Готов к работе</div>
+                        <div id="wordCount">Слов: 0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация Supabase
+        const SUPABASE_URL = 'https://oswmdoahckwfkspchefh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zd21kb2FoY2t3ZmtzcGNoZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNjI0MTcsImV4cCI6MjA3NDgzODQxN30.G4RkHYifKhvwJyl8FfT0Yif4Z0t63xa5Ou4G2uxLOw4';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Глобальные переменные
+        let currentUser = null;
+        let currentNoteId = null;
+        let selectedImageElement = null;
+        let autoSaveTimer = null;
+        let lastSavedContent = '';
+        let lastSavedTitle = '';
+        let isSwitchingNotes = false;
+        let allNotes = [];
+
+        // Инициализация приложения
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            await checkAuth();
+            setupEventListeners();
+            setupEditor();
+        }
+
+        function setupEventListeners() {
+            // Формы авторизации
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+
+            // Поиск
+            document.getElementById('searchInput').addEventListener('input', searchNotes);
+            document.getElementById('clearSearch').addEventListener('click', clearSearch);
+            
+            // Автосохранение с оптимизацией
+            document.getElementById('noteTitle').addEventListener('input', function() {
+                const currentTitle = this.value.trim();
+                if (currentTitle !== lastSavedTitle && !isSwitchingNotes) {
+                    scheduleAutoSave(3000);
+                }
+            });
+            
+            document.getElementById('editorContent').addEventListener('input', function() {
+                const currentContent = this.innerHTML;
+                if (currentContent !== lastSavedContent && !isSwitchingNotes) {
+                    scheduleAutoSave(5000);
+                }
+            });
+            
+            // Подсчет слов
+            document.getElementById('editorContent').addEventListener('input', updateWordCount);
+        }
+
+        function setupEditor() {
+            const editor = document.getElementById('editorContent');
+            
+            // Обработка специальных клавиш
+            editor.addEventListener('keydown', function(e) {
+                // Tab для отступов
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        document.execCommand('outdent', false, null);
+                    } else {
+                        document.execCommand('indent', false, null);
+                    }
+                }
+                
+                // Enter для умных списков
+                if (e.key === 'Enter') {
+                    handleEnterKey(e);
+                }
+            });
+
+            // Вставка изображений через Ctrl+V
+            editor.addEventListener('paste', function(e) {
+                handlePaste(e);
+            });
+
+            // Обновление состояния кнопок
+            editor.addEventListener('input', updateToolbarState);
+            editor.addEventListener('click', updateToolbarState);
+            editor.addEventListener('keyup', updateToolbarState);
+
+            // Обработка колесика мыши для скролла
+            editor.addEventListener('wheel', function(e) {
+                // Позволяем естественное поведение скролла
+                // Браузер автоматически обработает скролл благодаря overflow-y: auto
+            }, { passive: true });
+
+            // Инициализация последнего сохраненного состояния
+            lastSavedTitle = document.getElementById('noteTitle').value;
+            lastSavedContent = editor.innerHTML;
+        }
+
+        // ==================== ПЕРЕКЛЮЧЕНИЕ МЕЖДУ ЭКРАНАМИ ====================
+
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').style.display = 'flex';
+            document.getElementById('editorInterface').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'none';
+        }
+
+        function showEditorInterface() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('editorInterface').style.display = 'flex';
+            document.getElementById('saveBtn').style.display = 'flex';
+            
+            // Фокус на редактор после показа
+            setTimeout(() => {
+                document.getElementById('editorContent').focus();
+            }, 100);
+        }
+
+        // ==================== ПОИСК И ОЧИСТКА ПОИСКА ====================
+
+        function searchNotes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const clearSearchBtn = document.getElementById('clearSearch');
+            
+            if (searchTerm.length > 0) {
+                clearSearchBtn.style.display = 'block';
+            } else {
+                clearSearchBtn.style.display = 'none';
+            }
+            
+            if (!searchTerm.trim()) {
+                displayNotes(allNotes);
+                return;
+            }
+
+            const filteredNotes = allNotes.filter(note => {
+                const title = note.title?.toLowerCase() || '';
+                const content = note.content?.replace(/<[^>]*>/g, '').toLowerCase() || '';
+                return title.includes(searchTerm) || content.includes(searchTerm);
+            });
+
+            displayNotes(filteredNotes);
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearch').style.display = 'none';
+            displayNotes(allNotes);
+        }
+
+        // ==================== ВСТАВКА ИЗОБРАЖЕНИЙ ЧЕРЕЗ CTRL+V ====================
+
+        function handlePaste(e) {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            for (let item of items) {
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            insertImageFromDataUrl(e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function insertImageFromDataUrl(dataUrl) {
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.alt = 'Вставленное изображение';
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.borderRadius = '8px';
+            img.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            img.style.margin = '10px 0';
+
+            const container = document.createElement('div');
+            container.className = 'image-container left';
+            container.appendChild(img);
+            addImageControls(container);
+
+            const editor = document.getElementById('editorContent');
+            const selection = window.getSelection();
+            
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.insertNode(container);
+                range.insertNode(document.createTextNode('\u00A0'));
+            } else {
+                editor.appendChild(container);
+                editor.appendChild(document.createTextNode('\u00A0'));
+            }
+
+            manualSave();
+            
+            setTimeout(() => {
+                selectImage(img);
+            }, 100);
+        }
+
+        function addImageControls(container) {
+            const oldControls = container.querySelector('.image-controls');
+            if (oldControls) {
+                oldControls.remove();
+            }
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'image-control-btn delete';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.title = 'Удалить изображение';
+            deleteBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteImage(container);
+            };
+
+            const controls = document.createElement('div');
+            controls.className = 'image-controls';
+            controls.appendChild(deleteBtn);
+            
+            container.appendChild(controls);
+
+            controls.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+
+        function selectImage(imgElement) {
+            deselectImage();
+            selectedImageElement = imgElement;
+            const container = imgElement.closest('.image-container');
+            if (container) {
+                container.classList.add('selected');
+            }
+            
+            document.getElementById('deleteImageBtn').style.display = 'flex';
+            document.getElementById('alignmentControls').style.display = 'flex';
+        }
+
+        function deselectImage() {
+            if (selectedImageElement) {
+                const container = selectedImageElement.closest('.image-container');
+                if (container) {
+                    container.classList.remove('selected');
+                }
+                selectedImageElement = null;
+            }
+            document.getElementById('deleteImageBtn').style.display = 'none';
+            document.getElementById('alignmentControls').style.display = 'none';
+        }
+
+        function deleteSelectedImage() {
+            if (selectedImageElement) {
+                const container = selectedImageElement.closest('.image-container');
+                if (container) {
+                    deleteImage(container);
+                }
+            }
+        }
+
+        function deleteImage(container) {
+            if (confirm('Удалить это изображение?')) {
+                container.remove();
+                manualSave();
+                deselectImage();
+            }
+        }
+
+        function setImageAlignment(alignment) {
+            if (!selectedImageElement) return;
+            
+            const container = selectedImageElement.closest('.image-container');
+            if (!container) return;
+
+            container.classList.remove('left', 'right', 'center');
+            
+            if (alignment !== 'inline') {
+                container.classList.add(alignment);
+            }
+
+            document.querySelectorAll('.alignment-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            manualSave();
+        }
+
+        // ==================== ОПТИМИЗИРОВАННОЕ АВТОСОХРАНЕНИЕ ====================
+
+        function scheduleAutoSave(delay = 2000) {
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            autoSaveTimer = setTimeout(() => {
+                saveCurrentNote(true);
+            }, delay);
+        }
+
+        function manualSave() {
+            saveCurrentNote(false);
+        }
+
+        async function saveCurrentNote(isAutoSave = false) {
+            if (!currentNoteId || !currentUser) return;
+
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('editorContent').innerHTML;
+
+            if (title === lastSavedTitle && content === lastSavedContent) {
+                if (!isAutoSave) {
+                    showSaveIndicator('Нет изменений для сохранения');
+                }
+                return;
+            }
+
+            if (!title) {
+                if (!isAutoSave) {
+                    alert('Название конспекта не может быть пустым');
+                    document.getElementById('noteTitle').focus();
+                }
+                return;
+            }
+
+            try {
+                if (!isAutoSave) {
+                    updateStatus('Сохранение...');
+                }
+                
+                const { error } = await supabase
+                    .from('notes')
+                    .update({
+                        title: title,
+                        content: content,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentNoteId);
+
+                if (error) throw error;
+
+                lastSavedTitle = title;
+                lastSavedContent = content;
+
+                if (!isAutoSave) {
+                    await loadNotes();
+                    showSaveIndicator('Сохранено');
+                }
+                
+            } catch (error) {
+                console.error('Ошибка сохранения:', error);
+                if (!isAutoSave) {
+                    alert('Ошибка сохранения: ' + error.message);
+                    updateStatus('Ошибка сохранения');
+                }
+            }
+        }
+
+        function showSaveIndicator(message) {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.textContent = message;
+            indicator.style.display = 'block';
+            
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        // ==================== АВТОРИЗАЦИЯ ====================
+
+        async function checkAuth() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Ошибка проверки сессии:', error);
+                    showLogin();
+                    return;
+                }
+
+                if (session?.user) {
+                    currentUser = session.user;
+                    await initializeUser();
+                    showMainApp();
+                } else {
+                    showLogin();
+                }
+            } catch (error) {
+                console.error('Ошибка при проверке авторизации:', error);
+                showLogin();
+            }
+        }
+
+        async function initializeUser() {
+            if (!currentUser) return;
+
+            const { data: profile, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error) {
+                await createUserProfile();
+            } else {
+                currentUser.name = profile.name || currentUser.email.split('@')[0];
+            }
+
+            updateUserInterface();
+        }
+
+        async function createUserProfile() {
+            const { data, error } = await supabase
+                .from('users')
+                .insert([
+                    { 
+                        id: currentUser.id, 
+                        email: currentUser.email, 
+                        name: currentUser.email.split('@')[0]
+                    }
+                ])
+                .select()
+                .single();
+
+            if (!error && data) {
+                currentUser.name = data.name;
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                currentUser = data.user;
+                await initializeUser();
+                showMainApp();
+                
+            } catch (error) {
+                alert('Ошибка входа: ' + error.message);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) throw error;
+
+                if (data.user) {
+                    const { error: profileError } = await supabase
+                        .from('users')
+                        .insert([
+                            { 
+                                id: data.user.id, 
+                                email: email, 
+                                name: name 
+                            }
+                        ]);
+
+                    if (profileError) {
+                        console.error('Ошибка создания профиля:', profileError);
+                    }
+
+                    alert('Регистрация успешна! Проверьте вашу почту для подтверждения email.');
+                    showLogin();
+                }
+                
+            } catch (error) {
+                alert('Ошибка регистрации: ' + error.message);
+            }
+        }
+
+        async function logout() {
+            if (confirm('Вы уверены, что хотите выйти?')) {
+                await supabase.auth.signOut();
+                currentUser = null;
+                currentNoteId = null;
+                showLogin();
+            }
+        }
+
+        function updateUserInterface() {
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name || currentUser.email;
+                const avatar = document.getElementById('userAvatar');
+                avatar.textContent = (currentUser.name || currentUser.email).charAt(0).toUpperCase();
+            }
+        }
+
+        // ==================== РАБОТА С КОНСПЕКТАМИ ====================
+
+        async function loadNotes() {
+            if (!currentUser) return;
+
+            try {
+                showLoadingState(true);
+                
+                const { data: notes, error } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+
+                allNotes = notes || [];
+                displayNotes(allNotes);
+                
+                // Показываем экран приветствия если нет конспектов
+                if (allNotes.length === 0 && !currentNoteId) {
+                    showWelcomeScreen();
+                }
+                
+            } catch (error) {
+                console.error('Ошибка загрузки конспектов:', error);
+                document.getElementById('notesList').innerHTML = 
+                    '<div class="info-message">Ошибка загрузки конспектов</div>';
+            } finally {
+                showLoadingState(false);
+            }
+        }
+
+        function displayNotes(notes) {
+            const notesList = document.getElementById('notesList');
+            
+            if (notes.length === 0) {
+                notesList.innerHTML = `
+                    <div class="info-message">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
+                        <div>Конспекты не найдены</div>
+                        <div style="font-size: 14px; margin-top: 10px; color: #95a5a6;">
+                            ${document.getElementById('searchInput').value ? 'Попробуйте изменить поисковый запрос' : 'Нажмите "Новый конспект" чтобы создать первый'}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            notesList.innerHTML = '';
+
+            notes.forEach(note => {
+                const noteElement = document.createElement('div');
+                noteElement.className = `note-item fade-in ${note.id === currentNoteId ? 'active' : ''}`;
+                
+                const preview = note.content ? 
+                    note.content.replace(/<[^>]*>/g, '').substring(0, 120) : '';
+                
+                noteElement.innerHTML = `
+                    <button class="delete-note" onclick="event.stopPropagation(); deleteNote('${note.id}')" title="Удалить">
+                        ×
+                    </button>
+                    <div class="note-title">${escapeHtml(note.title || 'Без названия')}</div>
+                    <div class="note-preview">${escapeHtml(preview)}${preview.length === 120 ? '...' : ''}</div>
+                    <div class="note-date">
+                        📅 ${formatDate(note.updated_at)}
+                    </div>
+                `;
+                
+                noteElement.addEventListener('click', () => openNote(note.id));
+                notesList.appendChild(noteElement);
+            });
+        }
+
+        async function createNewNote() {
+            if (!currentUser) {
+                alert('Пожалуйста, войдите в систему');
+                return;
+            }
+
+            try {
+                isSwitchingNotes = true;
+                
+                const newNote = {
+                    user_id: currentUser.id,
+                    title: 'Новый конспект',
+                    content: '',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                const { data, error } = await supabase
+                    .from('notes')
+                    .insert([newNote])
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                await loadNotes();
+                await openNote(data.id);
+                
+            } catch (error) {
+                console.error('Ошибка создания конспекта:', error);
+                alert('Ошибка создания конспекта: ' + error.message);
+            } finally {
+                isSwitchingNotes = false;
+            }
+        }
+
+        async function openNote(noteId) {
+            try {
+                if (currentNoteId && currentNoteId !== noteId) {
+                    await saveCurrentNote(true);
+                }
+
+                isSwitchingNotes = true;
+
+                const { data: note, error } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .eq('id', noteId)
+                    .single();
+
+                if (error) throw error;
+
+                currentNoteId = noteId;
+                
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                const activeNoteElement = document.querySelector(`[onclick*="${noteId}"]`);
+                if (activeNoteElement) {
+                    activeNoteElement.classList.add('active');
+                }
+
+                // Показываем интерфейс редактора
+                showEditorInterface();
+
+                document.getElementById('noteTitle').value = note.title || '';
+                document.getElementById('editorContent').innerHTML = note.content || '';
+                
+                lastSavedTitle = note.title || '';
+                lastSavedContent = note.content || '';
+                
+                updateWordCount();
+                updateStatus('Конспект загружен');
+                
+            } catch (error) {
+                console.error('Ошибка загрузки конспекта:', error);
+                alert('Ошибка загрузки конспекта');
+            } finally {
+                isSwitchingNotes = false;
+            }
+        }
+
+        async function deleteNote(noteId) {
+            if (!confirm('Вы уверены, что хотите удалить этот конспект? Это действие нельзя отменить.')) {
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('notes')
+                    .delete()
+                    .eq('id', noteId);
+
+                if (error) throw error;
+
+                if (currentNoteId === noteId) {
+                    currentNoteId = null;
+                    document.getElementById('noteTitle').value = '';
+                    document.getElementById('editorContent').innerHTML = '';
+                    lastSavedTitle = '';
+                    lastSavedContent = '';
+                    updateWordCount();
+                    
+                    // Показываем экран приветствия если удалили последний конспект
+                    if (allNotes.length === 1) { // Будет 0 после удаления
+                        showWelcomeScreen();
+                    }
+                }
+                
+                await loadNotes();
+                updateStatus('Конспект удален');
+                
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+                alert('Ошибка удаления: ' + error.message);
+            }
+        }
+
+        // ==================== ФУНКЦИИ РЕДАКТОРА ====================
+
+        function formatText(command, value = null) {
+            document.execCommand(command, false, value);
+            document.getElementById('editorContent').focus();
+            updateToolbarState();
+            scheduleAutoSave(3000);
+        }
+
+        function insertBulletList() {
+            document.execCommand('insertUnorderedList', false, null);
+            scheduleAutoSave(3000);
+        }
+
+        function insertNumberedList() {
+            document.execCommand('insertOrderedList', false, null);
+            scheduleAutoSave(3000);
+        }
+
+        function insertHeading(level) {
+            document.execCommand('formatBlock', false, `<h${level}>`);
+            scheduleAutoSave(3000);
+        }
+
+        function insertBlockquote() {
+            document.execCommand('formatBlock', false, '<blockquote>');
+            scheduleAutoSave(3000);
+        }
+
+        function insertCode() {
+            const selection = window.getSelection();
+            if (selection.toString()) {
+                document.execCommand('formatBlock', false, '<pre>');
+            } else {
+                document.execCommand('insertHTML', false, '<code>введите код</code>');
+            }
+            scheduleAutoSave(3000);
+        }
+
+        function insertTable() {
+            const tableHTML = `
+                <table>
+                    <tr>
+                        <th>Заголовок 1</th>
+                        <th>Заголовок 2</th>
+                        <th>Заголовок 3</th>
+                    </tr>
+                    <tr>
+                        <td>Ячейка 1</td>
+                        <td>Ячейка 2</td>
+                        <td>Ячейка 3</td>
+                    </tr>
+                    <tr>
+                        <td>Ячейка 4</td>
+                        <td>Ячейка 5</td>
+                        <td>Ячейка 6</td>
+                    </tr>
+                </table>
+                <p></p>
+            `;
+            document.execCommand('insertHTML', false, tableHTML);
+            scheduleAutoSave(3000);
+        }
+
+        function insertLink() {
+            const url = prompt('Введите URL ссылки:', 'https://');
+            if (url) {
+                const text = window.getSelection().toString() || 'Ссылка';
+                document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener">${text}</a>`);
+                scheduleAutoSave(3000);
+            }
+        }
+
+        function handleEnterKey(e) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const listItem = range.startContainer.parentElement;
+                
+                if (listItem.tagName === 'LI' && listItem.textContent === '') {
+                    e.preventDefault();
+                    document.execCommand('outdent', false, null);
+                    return;
+                }
+            }
+        }
+
+        function updateToolbarState() {
+            const commands = ['bold', 'italic', 'underline', 'strikeThrough'];
+            commands.forEach(command => {
+                const isActive = document.queryCommandState(command);
+                const buttons = document.querySelectorAll(`.format-btn[onclick*="${command}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', isActive);
+                });
+            });
+
+            const alignments = ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'];
+            alignments.forEach(alignment => {
+                if (document.queryCommandState(alignment)) {
+                    document.querySelectorAll('.format-btn[onclick*="justify"]').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    const activeBtn = document.querySelector(`.format-btn[onclick*="${alignment}"]`);
+                    if (activeBtn) activeBtn.classList.add('active');
+                }
+            });
+        }
+
+        function updateWordCount() {
+            const text = document.getElementById('editorContent').innerText || '';
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const characters = text.length;
+            
+            document.getElementById('wordCount').textContent = 
+                `Слов: ${words} | Символов: ${characters}`;
+        }
+
+        function updateStatus(message) {
+            document.getElementById('statusInfo').textContent = message;
+        }
+
+        // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+
+        function showLoadingState(show) {
+            const app = document.getElementById('mainApp');
+            if (show) {
+                app.classList.add('loading');
+            } else {
+                app.classList.remove('loading');
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 1) {
+                    return 'Сегодня';
+                } else if (diffDays === 2) {
+                    return 'Вчера';
+                } else if (diffDays <= 7) {
+                    return `${diffDays - 1} дней назад`;
+                } else {
+                    return date.toLocaleDateString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+            } catch (e) {
+                return 'неизвестно';
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginModal').style.display = 'flex';
+            document.getElementById('registerModal').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('registerModal').style.display = 'flex';
+        }
+
+        function showMainApp() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('registerModal').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'flex';
+            
+            updateUserInterface();
+            loadNotes();
+            updateStatus('Готов к работе');
+        }
+    </script>
+</body>
+</html>
