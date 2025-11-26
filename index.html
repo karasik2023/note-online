@@ -34,7 +34,7 @@
             overflow-x: hidden;
         }
 
-        /* Модальные окна */
+
         .modal {
             display: none;
             position: fixed;
@@ -410,7 +410,6 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            /* Разрешаем скролл для редактора */
             overflow: hidden;
         }
 
@@ -619,7 +618,6 @@
             min-height: 200px;
         }
 
-        /* Стили для скроллбара в редакторе */
         .editor-content::-webkit-scrollbar {
             width: 8px;
         }
@@ -645,7 +643,6 @@
             font-style: italic;
         }
 
-        /* Стили для контента редактора */
         .editor-content h1 {
             font-size: 2.5em;
             color: var(--secondary-color);
@@ -871,7 +868,7 @@
             border-color: var(--primary-color);
         }
 
-        /* Утилиты */
+        /* визуалы */
         .hidden {
             display: none !important;
         }
@@ -907,7 +904,6 @@
             display: none;
         }
 
-        /* Адаптивность */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -977,7 +973,7 @@
     </style>
 </head>
 <body>
-    <!-- Модальные окна авторизации -->
+    <!-- Авторизция -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <h2>👋 Добро пожаловать!</h2>
@@ -1061,7 +1057,7 @@
                 </div>
             </div>
 
-            <!-- Область редактора -->
+            <!-- Холст -->
             <div class="editor">
                 <!-- Экран приветствия -->
                 <div class="welcome-screen" id="welcomeScreen">
@@ -1076,7 +1072,7 @@
                     </button>
                 </div>
 
-                <!-- Интерфейс редактора (изначально скрыт) -->
+                <!-- Интерфейс -->
                 <div id="editorInterface" style="display: none; height: 100%; flex-direction: column;">
                     <div class="editor-header">
                         <input type="text" class="editor-title" placeholder="Введите название конспекта..." id="noteTitle">
@@ -1085,7 +1081,7 @@
                         </button>
                     </div>
                     
-                    <!-- Панель инструментов редактора -->
+                    <!-- инструметы -->
                     <div class="editor-toolbar">
                         <!-- Форматирование текста -->
                         <div class="toolbar-group">
@@ -1108,7 +1104,7 @@
 
                         <div class="divider"></div>
 
-                        <!-- Стили текста -->
+                        <!-- Стили -->
                         <div class="toolbar-group">
                             <button type="button" class="format-btn" onclick="formatText('bold')" title="Жирный">
                                 <strong>B</strong>
@@ -1136,12 +1132,10 @@
 
                         <div class="divider"></div>
 
-                        <!-- Списки и отступы -->
+                        <!-- Списки -->
                         <div class="toolbar-group">
                             <button type="button" class="format-btn" onclick="insertBulletList()" title="Маркированный список">•</button>
                             <button type="button" class="format-btn" onclick="insertNumberedList()" title="Нумерованный список">1.</button>
-                            <button type="button" class="format-btn" onclick="formatText('outdent')" title="Уменьшить отступ">←</button>
-                            <button type="button" class="format-btn" onclick="formatText('indent')" title="Увеличить отступ">→</button>
                         </div>
 
                         <div class="divider"></div>
@@ -2081,4 +2075,5 @@
         }
     </script>
 </body>
+
 </html>
