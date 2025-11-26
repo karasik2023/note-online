@@ -1083,7 +1083,6 @@
                     
                     <!-- инструметы -->
                     <div class="editor-toolbar">
-                        <!-- Форматирование текста -->
                         <div class="toolbar-group">
                             <select class="font-select" onchange="formatText('fontName', this.value)">
                                 <option value="">Шрифт</option>
@@ -1103,8 +1102,6 @@
                         </div>
 
                         <div class="divider"></div>
-
-                        <!-- Стили -->
                         <div class="toolbar-group">
                             <button type="button" class="format-btn" onclick="formatText('bold')" title="Жирный">
                                 <strong>B</strong>
@@ -1122,7 +1119,6 @@
 
                         <div class="divider"></div>
 
-                        <!-- Выравнивание -->
                         <div class="toolbar-group">
                             <button type="button" class="format-btn" onclick="formatText('justifyLeft')" title="По левому краю">⬅</button>
                             <button type="button" class="format-btn" onclick="formatText('justifyCenter')" title="По центру">↔</button>
@@ -1132,7 +1128,6 @@
 
                         <div class="divider"></div>
 
-                        <!-- Списки -->
                         <div class="toolbar-group">
                             <button type="button" class="format-btn" onclick="insertBulletList()" title="Маркированный список">•</button>
                             <button type="button" class="format-btn" onclick="insertNumberedList()" title="Нумерованный список">1.</button>
@@ -1140,7 +1135,6 @@
 
                         <div class="divider"></div>
 
-                        <!-- Структура -->
                         <div class="toolbar-group">
                             <button type="button" class="format-btn" onclick="insertHeading(1)" title="Заголовок 1">H1</button>
                             <button type="button" class="format-btn" onclick="insertHeading(2)" title="Заголовок 2">H2</button>
@@ -1150,12 +1144,10 @@
                         </div>
 
                         <div class="divider"></div>
-
-                        <!-- Дополнительные функции -->
+                        
                         <div class="toolbar-group">
                             <input type="color" class="color-picker" onchange="formatText('foreColor', this.value)" title="Цвет текста">
                             <button type="button" class="format-btn" onclick="formatText('removeFormat')" title="Очистить форматирование">✕</button>
-                            <button type="button" class="format-btn" onclick="insertTable()" title="Вставить таблицу">⧉</button>
                             <button type="button" class="format-btn" onclick="insertLink()" title="Вставить ссылку">🔗</button>
                         </div>
 
@@ -1183,7 +1175,7 @@
     </div>
 
     <script>
-        // Конфигурация Supabase
+        // БД
         const SUPABASE_URL = 'https://oswmdoahckwfkspchefh.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zd21kb2FoY2t3ZmtzcGNoZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNjI0MTcsImV4cCI6MjA3NDgzODQxN30.G4RkHYifKhvwJyl8FfT0Yif4Z0t63xa5Ou4G2uxLOw4';
         
@@ -1199,7 +1191,6 @@
         let isSwitchingNotes = false;
         let allNotes = [];
 
-        // Инициализация приложения
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
         });
@@ -1219,7 +1210,7 @@
             document.getElementById('searchInput').addEventListener('input', searchNotes);
             document.getElementById('clearSearch').addEventListener('click', clearSearch);
             
-            // Автосохранение с оптимизацией
+            // Автосохранение
             document.getElementById('noteTitle').addEventListener('input', function() {
                 const currentTitle = this.value.trim();
                 if (currentTitle !== lastSavedTitle && !isSwitchingNotes) {
@@ -1234,14 +1225,14 @@
                 }
             });
             
-            // Подсчет слов
+            
             document.getElementById('editorContent').addEventListener('input', updateWordCount);
         }
 
         function setupEditor() {
             const editor = document.getElementById('editorContent');
             
-            // Обработка специальных клавиш
+            // спец клавиши
             editor.addEventListener('keydown', function(e) {
                 // Tab для отступов
                 if (e.key === 'Tab') {
@@ -1253,34 +1244,27 @@
                     }
                 }
                 
-                // Enter для умных списков
                 if (e.key === 'Enter') {
                     handleEnterKey(e);
                 }
             });
 
-            // Вставка изображений через Ctrl+V
+            //Ctrl+V
             editor.addEventListener('paste', function(e) {
                 handlePaste(e);
             });
 
-            // Обновление состояния кнопок
             editor.addEventListener('input', updateToolbarState);
             editor.addEventListener('click', updateToolbarState);
             editor.addEventListener('keyup', updateToolbarState);
 
-            // Обработка колесика мыши для скролла
-            editor.addEventListener('wheel', function(e) {
-                // Позволяем естественное поведение скролла
-                // Браузер автоматически обработает скролл благодаря overflow-y: auto
+            editor.addEventListener('wheel', function(e) {       
             }, { passive: true });
 
-            // Инициализация последнего сохраненного состояния
             lastSavedTitle = document.getElementById('noteTitle').value;
             lastSavedContent = editor.innerHTML;
         }
 
-        // ==================== ПЕРЕКЛЮЧЕНИЕ МЕЖДУ ЭКРАНАМИ ====================
 
         function showWelcomeScreen() {
             document.getElementById('welcomeScreen').style.display = 'flex';
@@ -1292,14 +1276,12 @@
             document.getElementById('welcomeScreen').style.display = 'none';
             document.getElementById('editorInterface').style.display = 'flex';
             document.getElementById('saveBtn').style.display = 'flex';
-            
-            // Фокус на редактор после показа
             setTimeout(() => {
                 document.getElementById('editorContent').focus();
             }, 100);
         }
 
-        // ==================== ПОИСК И ОЧИСТКА ПОИСКА ====================
+        // ПОИСК
 
         function searchNotes() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -1331,7 +1313,7 @@
             displayNotes(allNotes);
         }
 
-        // ==================== ВСТАВКА ИЗОБРАЖЕНИЙ ЧЕРЕЗ CTRL+V ====================
+        //CTRL+V 
 
         function handlePaste(e) {
             const items = e.clipboardData?.items;
@@ -1475,7 +1457,7 @@
             manualSave();
         }
 
-        // ==================== ОПТИМИЗИРОВАННОЕ АВТОСОХРАНЕНИЕ ====================
+        // Автосейв
 
         function scheduleAutoSave(delay = 2000) {
             if (autoSaveTimer) {
@@ -1554,7 +1536,7 @@
             }, 2000);
         }
 
-        // ==================== АВТОРИЗАЦИЯ ====================
+        // авторизация
 
         async function checkAuth() {
             try {
@@ -1692,7 +1674,7 @@
             }
         }
 
-        // ==================== РАБОТА С КОНСПЕКТАМИ ====================
+        // конпекты создание поиск сохранени и прчее
 
         async function loadNotes() {
             if (!currentUser) return;
@@ -1829,7 +1811,6 @@
                     activeNoteElement.classList.add('active');
                 }
 
-                // Показываем интерфейс редактора
                 showEditorInterface();
 
                 document.getElementById('noteTitle').value = note.title || '';
@@ -1869,9 +1850,8 @@
                     lastSavedTitle = '';
                     lastSavedContent = '';
                     updateWordCount();
-                    
-                    // Показываем экран приветствия если удалили последний конспект
-                    if (allNotes.length === 1) { // Будет 0 после удаления
+
+                    if (allNotes.length === 1) { 
                         showWelcomeScreen();
                     }
                 }
@@ -1885,7 +1865,7 @@
             }
         }
 
-        // ==================== ФУНКЦИИ РЕДАКТОРА ====================
+        // фции редактора
 
         function formatText(command, value = null) {
             document.execCommand(command, false, value);
@@ -1924,31 +1904,7 @@
             scheduleAutoSave(3000);
         }
 
-        function insertTable() {
-            const tableHTML = `
-                <table>
-                    <tr>
-                        <th>Заголовок 1</th>
-                        <th>Заголовок 2</th>
-                        <th>Заголовок 3</th>
-                    </tr>
-                    <tr>
-                        <td>Ячейка 1</td>
-                        <td>Ячейка 2</td>
-                        <td>Ячейка 3</td>
-                    </tr>
-                    <tr>
-                        <td>Ячейка 4</td>
-                        <td>Ячейка 5</td>
-                        <td>Ячейка 6</td>
-                    </tr>
-                </table>
-                <p></p>
-            `;
-            document.execCommand('insertHTML', false, tableHTML);
-            scheduleAutoSave(3000);
-        }
-
+        
         function insertLink() {
             const url = prompt('Введите URL ссылки:', 'https://');
             if (url) {
@@ -2077,3 +2033,4 @@
 </body>
 
 </html>
+
