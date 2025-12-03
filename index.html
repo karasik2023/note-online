@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Умный редактор конспектов</title>
+    <title>Умный редактор конспектов - Notebook стиль</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -24,6 +24,10 @@
             --bg-white: #ffffff;
             --border-color: #e1e8ed;
             --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --cell-bg: #ffffff;
+            --cell-border: #e0e0e0;
+            --cell-active-border: #3498db;
+            --cell-padding: 20px;
         }
 
         body {
@@ -33,7 +37,6 @@
             color: var(--text-color);
             overflow-x: hidden;
         }
-
 
         .modal {
             display: none;
@@ -168,7 +171,6 @@
             text-decoration: underline;
         }
 
-        /* Основное приложение */
         #mainApp {
             display: none;
             height: 100vh;
@@ -264,7 +266,6 @@
             overflow: hidden;
         }
 
-        /* Боковая панель */
         .sidebar {
             width: 350px;
             background: var(--bg-white);
@@ -403,7 +404,6 @@
             opacity: 1;
         }
 
-        /* Редактор */
         .editor {
             flex: 1;
             background: var(--bg-white);
@@ -413,7 +413,6 @@
             overflow: hidden;
         }
 
-        /* Экран приветствия */
         .welcome-screen {
             flex: 1;
             display: flex;
@@ -494,6 +493,159 @@
 
         .editor-title::placeholder {
             color: #bdc3c7;
+        }
+
+        .cell-toolbar {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .add-cell-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .add-cell-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .cells-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--bg-color);
+        }
+
+        .cell {
+            position: relative;
+            background: var(--cell-bg);
+            border: 2px solid var(--cell-border);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            min-height: 100px;
+        }
+
+        .cell:hover {
+            border-color: #d0d0d0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .cell.active {
+            border-color: var(--cell-active-border);
+            background: linear-gradient(135deg, #f8fbfe 0%, #f0f8ff 100%);
+        }
+
+        .cell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-bottom: 1px solid var(--cell-border);
+            border-radius: 8px 8px 0 0;
+            cursor: move;
+            user-select: none;
+        }
+
+        .cell-type {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cell-type-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1565c0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: #e3f2fd;
+        }
+
+        .cell-controls {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cell:hover .cell-controls {
+            opacity: 1;
+        }
+
+        .cell-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            background: var(--bg-white);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .cell-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .cell-btn.delete {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .cell-btn.delete:hover {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .cell-content-wrapper {
+            padding: var(--cell-padding);
+            min-height: 60px;
+        }
+
+        .cell-content {
+            outline: none;
+            min-height: 60px;
+            line-height: 1.8;
+            font-size: 16px;
+            background: transparent;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            max-width: 100%;
+        }
+
+        .cell-content:empty:before {
+            content: "Начните вводить текст...";
+            color: #bdc3c7;
+            font-style: italic;
+            pointer-events: none;
         }
 
         .editor-toolbar {
@@ -589,122 +741,49 @@
             flex-shrink: 0;
         }
 
-        /* Контейнер для контента редактора */
-        .editor-content-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .editor-content {
-            flex: 1;
-            padding: 40px;
-            outline: none;
-            overflow-y: auto;
-            overflow-x: hidden;
-            line-height: 1.8;
-            font-size: 16px;
-            background: var(--bg-white);
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            hyphens: auto;
-            white-space: normal;
-            max-width: 100%;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            min-height: 200px;
-        }
-
-        .editor-content::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .editor-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .editor-content::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-            transition: background 0.3s ease;
-        }
-
-        .editor-content::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
-        .editor-content:empty:before {
-            content: "Начните вводить текст вашего конспекта...";
-            color: #bdc3c7;
-            font-style: italic;
-        }
-
-        .editor-content h1 {
+        .cell-content h1 {
             font-size: 2.5em;
             color: var(--secondary-color);
             margin: 30px 0 20px 0;
             padding-bottom: 10px;
             border-bottom: 3px solid var(--primary-color);
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
         }
 
-        .editor-content h2 {
+        .cell-content h2 {
             font-size: 2em;
             color: var(--secondary-color);
             margin: 25px 0 15px 0;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
         }
 
-        .editor-content h3 {
+        .cell-content h3 {
             font-size: 1.5em;
             color: var(--secondary-color);
             margin: 20px 0 10px 0;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
         }
 
-        .editor-content p {
+        .cell-content p {
             margin: 15px 0;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
         }
 
-        .editor-content blockquote {
+        .cell-content blockquote {
             border-left: 4px solid var(--primary-color);
             margin: 20px 0;
             padding: 15px 25px;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             font-style: italic;
             border-radius: 0 8px 8px 0;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
         }
 
-        .editor-content code {
+        .cell-content code {
             background: #2c3e50;
             color: #ecf0f1;
             padding: 3px 6px;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-all;
-            white-space: pre-wrap;
         }
 
-        .editor-content pre {
+        .cell-content pre {
             background: #2c3e50;
             color: #ecf0f1;
             padding: 20px;
@@ -712,13 +791,9 @@
             overflow-x: auto;
             margin: 20px 0;
             border: 1px solid #34495e;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-all;
-            white-space: pre-wrap;
         }
 
-        .editor-content table {
+        .cell-content table {
             border-collapse: collapse;
             width: 100%;
             margin: 20px 0;
@@ -728,26 +803,22 @@
             max-width: 100%;
         }
 
-        .editor-content th, .editor-content td {
+        .cell-content th, .cell-content td {
             border: 1px solid var(--border-color);
             padding: 12px 15px;
             text-align: left;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
         }
 
-        .editor-content th {
+        .cell-content th {
             background: var(--primary-color);
             color: white;
             font-weight: 600;
         }
 
-        .editor-content tr:nth-child(even) {
+        .cell-content tr:nth-child(even) {
             background: var(--bg-color);
         }
 
-        /* Изображения */
         .image-container {
             position: relative;
             display: inline-block;
@@ -757,29 +828,7 @@
             max-width: 100%;
         }
 
-        .image-container.left {
-            float: left;
-            margin-right: 20px;
-            margin-left: 0;
-            max-width: calc(50% - 20px);
-        }
-
-        .image-container.right {
-            float: right;
-            margin-left: 20px;
-            margin-right: 0;
-            max-width: calc(50% - 20px);
-        }
-
-        .image-container.center {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            float: none;
-            max-width: 80%;
-        }
-
-        .editor-content img {
+        .cell-content img {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
@@ -789,88 +838,45 @@
             display: block;
         }
 
-        .editor-content img:hover {
+        .cell-content img:hover {
             transform: scale(1.02);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
-        .editor-content img.selected {
-            box-shadow: 0 0 0 3px var(--primary-color), 0 8px 25px rgba(0,0,0,0.15);
+        .cell.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
         }
 
-        .image-controls {
-            position: absolute;
-            top: -15px;
-            right: -15px;
-            display: none;
-            gap: 5px;
-            background: var(--bg-white);
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            z-index: 20;
+        .cell.drop-target {
+            border: 2px dashed var(--primary-color);
+            background: rgba(52, 152, 219, 0.05);
         }
 
-        .image-container:hover .image-controls {
-            display: flex;
+        .drag-handle {
+            cursor: move;
+            padding: 4px;
+            color: var(--text-light);
+            transition: color 0.3s ease;
         }
 
-        .image-control-btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
+        .drag-handle:hover {
+            color: var(--primary-color);
         }
 
-        .image-control-btn:hover {
-            transform: scale(1.1);
+        @keyframes cellAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .image-control-btn.delete {
-            background: var(--accent-color);
-        }
-
-        .alignment-controls {
-            display: none;
-            gap: 5px;
-            margin-left: 15px;
-        }
-
-        .alignment-btn {
-            background: var(--bg-white);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .alignment-btn.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .alignment-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        /* визуалы */
-        .hidden {
-            display: none !important;
+        .cell.new {
+            animation: cellAppear 0.3s ease;
         }
 
         .info-message {
@@ -878,11 +884,6 @@
             text-align: center;
             color: var(--text-light);
             font-size: 16px;
-        }
-
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
         }
 
         .status-bar {
@@ -904,6 +905,174 @@
             display: none;
         }
 
+        .wiki-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--primary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 2px 4px;
+            border-radius: 3px;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.05) 100%);
+            display: inline;
+        }
+
+        .wiki-link:hover {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(52, 152, 219, 0.1) 100%);
+            border-bottom: 1px solid var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .wiki-link.active {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.3) 0%, rgba(52, 152, 219, 0.2) 100%);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .link-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .link-modal-content {
+            background: var(--bg-white);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        .link-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .link-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .link-form-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 14px;
+        }
+
+        .link-form-input {
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--bg-white);
+        }
+
+        .link-form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .link-form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .link-preview {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .link-preview-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+        }
+
+        .link-help {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .link-context-menu {
+            position: fixed;
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 200px;
+            display: none;
+        }
+
+        .link-context-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .link-context-item:last-child {
+            border-bottom: none;
+        }
+
+        .link-context-item:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .link-context-item.danger:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -914,7 +1083,7 @@
                 height: 300px;
             }
             
-            .editor-toolbar {
+            .cell-toolbar, .editor-toolbar {
                 padding: 10px 15px;
                 gap: 5px;
             }
@@ -930,8 +1099,8 @@
                 font-size: 12px;
             }
             
-            .editor-content {
-                padding: 20px;
+            .cell-content-wrapper {
+                padding: 15px;
             }
 
             .editor-title {
@@ -952,28 +1121,13 @@
             }
         }
 
-        /* Анимации */
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .slide-up {
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <!-- Авторизция -->
+    <!-- Авторизация -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <h2>👋 Добро пожаловать!</h2>
@@ -1015,6 +1169,58 @@
         </div>
     </div>
 
+    <!-- Модальное окно для ссылок -->
+    <div id="linkModal" class="link-modal">
+        <div class="link-modal-content">
+            <h3 style="margin-bottom: 20px; color: var(--secondary-color);">📎 Вставить/Редактировать ссылку</h3>
+            <form id="linkForm" class="link-form">
+                <div class="link-form-group">
+                    <label class="link-form-label">URL ссылки</label>
+                    <input type="text" class="link-form-input" id="linkUrl" 
+                           placeholder="https://example.com или имя_конспекта" required>
+                    <div class="link-help">
+                        Можно указать внешний URL или имя другого конспекта для внутренней ссылки
+                    </div>
+                </div>
+                
+                <div class="link-form-group">
+                    <label class="link-form-label">Отображаемый текст (опционально)</label>
+                    <input type="text" class="link-form-input" id="linkText" 
+                           placeholder="Текст, который увидит пользователь">
+                    <div class="link-help">
+                        Если оставить пустым, будет отображаться URL или название конспекта
+                    </div>
+                </div>
+                
+                <div class="link-preview" id="linkPreview">
+                    <div class="link-preview-label">Предпросмотр:</div>
+                    <div id="previewText">[[URL|Текст]]</div>
+                </div>
+                
+                <div class="link-form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideLinkModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Вставить ссылку</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Контекстное меню для ссылок -->
+    <div id="linkContextMenu" class="link-context-menu">
+        <div class="link-context-item" onclick="openLink()">
+            <span>🔗</span> Перейти по ссылке
+        </div>
+        <div class="link-context-item" onclick="editSelectedLink()">
+            <span>✏️</span> Редактировать ссылку
+        </div>
+        <div class="link-context-item" onclick="copyLink()">
+            <span>📋</span> Копировать ссылку
+        </div>
+        <div class="link-context-item danger" onclick="removeLink()">
+            <span>🗑️</span> Удалить ссылку
+        </div>
+    </div>
+
     <!-- Основное приложение -->
     <div id="mainApp">
         <div class="header">
@@ -1029,9 +1235,8 @@
                     <button type="button" class="tool-btn" onclick="manualSave()" id="saveBtn" style="display: none;">
                         💾 Сохранить
                     </button>
-                    <button type="button" class="tool-btn btn-danger" onclick="deleteSelectedImage()" 
-                            id="deleteImageBtn" style="display: none;">
-                        🗑️ Удалить изображение
+                    <button type="button" class="tool-btn" onclick="addCell()" id="addCellBtn">
+                        ➕ Добавить ячейку
                     </button>
                 </div>
             </div>
@@ -1043,7 +1248,7 @@
         </div>
 
         <div class="main-container">
-            <!-- Боковая панель с конспектами -->
+            <!-- Боковая панель -->
             <div class="sidebar">
                 <div class="sidebar-header">
                     <input type="text" class="search-input" placeholder="🔍 Поиск конспектов..." id="searchInput">
@@ -1057,7 +1262,7 @@
                 </div>
             </div>
 
-            <!-- Холст -->
+            <!-- Редактор с ячейками -->
             <div class="editor">
                 <!-- Экран приветствия -->
                 <div class="welcome-screen" id="welcomeScreen">
@@ -1072,7 +1277,7 @@
                     </button>
                 </div>
 
-                <!-- Интерфейс -->
+                <!-- Интерфейс редактора -->
                 <div id="editorInterface" style="display: none; height: 100%; flex-direction: column;">
                     <div class="editor-header">
                         <input type="text" class="editor-title" placeholder="Введите название конспекта..." id="noteTitle">
@@ -1081,8 +1286,21 @@
                         </button>
                     </div>
                     
-                    <!-- инструметы -->
-                    <div class="editor-toolbar">
+                    <!-- Панель ячеек -->
+                    <div class="cell-toolbar">
+                        <button class="add-cell-btn" onclick="addCell()">
+                            ➕ Добавить ячейку
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearAllCells()">
+                            🗑️ Очистить все
+                        </button>
+                        <span style="margin-left: auto; color: var(--text-light); font-size: 14px;">
+                            Ячеек: <span id="cellCount">0</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Панель форматирования -->
+                    <div class="editor-toolbar" id="editorToolbar">
                         <div class="toolbar-group">
                             <select class="font-select" onchange="formatText('fontName', this.value)">
                                 <option value="">Шрифт</option>
@@ -1150,18 +1368,17 @@
                             <button type="button" class="format-btn" onclick="formatText('removeFormat')" title="Очистить форматирование">✕</button>
                             <button type="button" class="format-btn" onclick="insertLink()" title="Вставить ссылку">🔗</button>
                         </div>
-
-                        <!-- Контролы для изображений -->
-                        <div class="alignment-controls" id="alignmentControls">
-                            <button type="button" class="alignment-btn active" onclick="setImageAlignment('left')" title="Выровнять слева">⬅️</button>
-                            <button type="button" class="alignment-btn" onclick="setImageAlignment('center')" title="Выровнять по центру">⏺️</button>
-                            <button type="button" class="alignment-btn" onclick="setImageAlignment('right')" title="Выровнять справа">➡️</button>
-                        </div>
                     </div>
-
-                    <!-- Контейнер для области редактирования -->
-                    <div class="editor-content-container">
-                        <div class="editor-content" contenteditable="true" id="editorContent"></div>
+                    
+                    <!-- Контейнер для ячеек -->
+                    <div class="cells-container" id="cellsContainer">
+                        <div class="info-message" id="emptyMessage">
+                            <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
+                            <div>Начните с добавления первой ячейки!</div>
+                            <div style="font-size: 14px; margin-top: 10px; color: #95a5a6;">
+                                Используйте кнопку "Добавить ячейку" или нажмите Tab для создания новой ячейки
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Статус бар -->
@@ -1175,21 +1392,24 @@
     </div>
 
     <script>
-        // БД
         const SUPABASE_URL = 'https://oswmdoahckwfkspchefh.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zd21kb2FoY2t3ZmtzcGNoZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNjI0MTcsImV4cCI6MjA3NDgzODQxN30.G4RkHYifKhvwJyl8FfT0Yif4Z0t63xa5Ou4G2uxLOw4';
         
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Глобальные переменные
         let currentUser = null;
         let currentNoteId = null;
-        let selectedImageElement = null;
         let autoSaveTimer = null;
         let lastSavedContent = '';
         let lastSavedTitle = '';
         let isSwitchingNotes = false;
         let allNotes = [];
+        let cells = [];
+        let cellIdCounter = 0;
+        let draggedCell = null;
+        let currentLinkElement = null;
+        let linkContextMenuVisible = false;
+        let savedRange = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
@@ -1198,19 +1418,13 @@
         async function initializeApp() {
             await checkAuth();
             setupEventListeners();
-            setupEditor();
         }
 
         function setupEventListeners() {
-            // Формы авторизации
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('registerForm').addEventListener('submit', handleRegister);
-
-            // Поиск
             document.getElementById('searchInput').addEventListener('input', searchNotes);
             document.getElementById('clearSearch').addEventListener('click', clearSearch);
-            
-            // Автосохранение
             document.getElementById('noteTitle').addEventListener('input', function() {
                 const currentTitle = this.value.trim();
                 if (currentTitle !== lastSavedTitle && !isSwitchingNotes) {
@@ -1218,280 +1432,789 @@
                 }
             });
             
-            document.getElementById('editorContent').addEventListener('input', function() {
-                const currentContent = this.innerHTML;
-                if (currentContent !== lastSavedContent && !isSwitchingNotes) {
-                    scheduleAutoSave(5000);
+            document.addEventListener('mousedown', function(e) {
+                if (e.target.classList.contains('drag-handle') || e.target.closest('.drag-handle')) {
+                    startDrag(e);
                 }
             });
             
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', stopDrag);
             
-            document.getElementById('editorContent').addEventListener('input', updateWordCount);
-        }
-
-        function setupEditor() {
-            const editor = document.getElementById('editorContent');
-            
-            // спец клавиши
-            editor.addEventListener('keydown', function(e) {
-                // Tab для отступов
-                if (e.key === 'Tab') {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab' && document.activeElement.classList.contains('cell-content')) {
                     e.preventDefault();
-                    if (e.shiftKey) {
-                        document.execCommand('outdent', false, null);
-                    } else {
-                        document.execCommand('indent', false, null);
+                    const cell = document.activeElement.closest('.cell');
+                    if (cell) {
+                        const index = Array.from(cell.parentElement.children)
+                            .filter(el => el.classList.contains('cell'))
+                            .indexOf(cell);
+                        addCell(index + 1);
                     }
                 }
                 
-                if (e.key === 'Enter') {
-                    handleEnterKey(e);
+                if (e.key === 'Escape' && linkContextMenuVisible) {
+                    closeLinkContextMenu();
                 }
             });
-
-            //Ctrl+V
-            editor.addEventListener('paste', function(e) {
-                handlePaste(e);
-            });
-
-            editor.addEventListener('input', updateToolbarState);
-            editor.addEventListener('click', updateToolbarState);
-            editor.addEventListener('keyup', updateToolbarState);
-
-            editor.addEventListener('wheel', function(e) {       
-            }, { passive: true });
-
-            lastSavedTitle = document.getElementById('noteTitle').value;
-            lastSavedContent = editor.innerHTML;
-        }
-
-
-        function showWelcomeScreen() {
-            document.getElementById('welcomeScreen').style.display = 'flex';
-            document.getElementById('editorInterface').style.display = 'none';
-            document.getElementById('saveBtn').style.display = 'none';
-        }
-
-        function showEditorInterface() {
-            document.getElementById('welcomeScreen').style.display = 'none';
-            document.getElementById('editorInterface').style.display = 'flex';
-            document.getElementById('saveBtn').style.display = 'flex';
-            setTimeout(() => {
-                document.getElementById('editorContent').focus();
-            }, 100);
-        }
-
-        // ПОИСК
-
-        function searchNotes() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const clearSearchBtn = document.getElementById('clearSearch');
             
-            if (searchTerm.length > 0) {
-                clearSearchBtn.style.display = 'block';
-            } else {
-                clearSearchBtn.style.display = 'none';
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('cell-content')) {
+                    clearTimeout(window.linkRenderTimeout);
+                    window.linkRenderTimeout = setTimeout(renderWikiLinks, 500);
+                }
+            });
+            
+            document.addEventListener('dblclick', function(e) {
+                if (e.target.classList.contains('wiki-link')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    currentLinkElement = e.target;
+                    editSelectedLink();
+                }
+            });
+            
+            document.getElementById('linkForm').addEventListener('submit', handleLinkSubmit);
+            document.getElementById('linkUrl').addEventListener('input', updateLinkPreview);
+            document.getElementById('linkText').addEventListener('input', updateLinkPreview);
+            
+            // Обработчик для сброса форматирования после ссылки
+            document.addEventListener('keyup', function(e) {
+                if (e.key === ' ') {
+                    const selection = window.getSelection();
+                    const anchorNode = selection.anchorNode;
+                    
+                    if (anchorNode && anchorNode.nodeType === Node.TEXT_NODE) {
+                        const previousSibling = anchorNode.previousSibling;
+                        if (previousSibling && previousSibling.classList && 
+                            previousSibling.classList.contains('wiki-link')) {
+                            document.execCommand('removeFormat', false, null);
+                        }
+                    }
+                }
+            });
+        }
+
+        // ФУНКЦИИ ДЛЯ ЯЧЕЕК
+        function addCell(position = null) {
+            const container = document.getElementById('cellsContainer');
+            const emptyMessage = document.getElementById('emptyMessage');
+            
+            if (emptyMessage) {
+                emptyMessage.style.display = 'none';
             }
             
-            if (!searchTerm.trim()) {
-                displayNotes(allNotes);
+            const cellId = `cell_${Date.now()}_${cellIdCounter++}`;
+            const cell = {
+                id: cellId,
+                content: '',
+                metadata: {}
+            };
+            
+            const cellElement = createCellElement(cell);
+            
+            if (position !== null && position < cells.length) {
+                const referenceElement = Array.from(container.children)
+                    .filter(el => el.classList.contains('cell'))
+                    [position];
+                if (referenceElement) {
+                    container.insertBefore(cellElement, referenceElement);
+                } else {
+                    container.appendChild(cellElement);
+                }
+            } else {
+                container.appendChild(cellElement);
+            }
+            
+            cells.push(cell);
+            
+            cellElement.classList.add('new');
+            setTimeout(() => {
+                cellElement.classList.remove('new');
+            }, 300);
+            
+            setTimeout(() => {
+                const content = cellElement.querySelector('.cell-content');
+                if (content) {
+                    content.focus();
+                }
+            }, 100);
+            
+            updateCellCount();
+            scheduleAutoSave(2000);
+            return cellElement;
+        }
+
+        function createCellElement(cell) {
+            const cellElement = document.createElement('div');
+            cellElement.className = 'cell';
+            cellElement.id = cell.id;
+            cellElement.dataset.cellId = cell.id;
+            
+            const header = document.createElement('div');
+            header.className = 'cell-header';
+            
+            const typeLabel = document.createElement('div');
+            typeLabel.className = 'cell-type-label';
+            typeLabel.textContent = 'Текст';
+            
+            const typeDiv = document.createElement('div');
+            typeDiv.className = 'cell-type';
+            typeDiv.innerHTML = `
+                <span class="drag-handle">☰</span>
+                ${typeLabel.outerHTML}
+            `;
+            
+            const controls = document.createElement('div');
+            controls.className = 'cell-controls';
+            controls.innerHTML = `
+                <button class="cell-btn move-up" onclick="moveCell('${cell.id}', 'up')" title="Переместить вверх">
+                    ↑
+                </button>
+                <button class="cell-btn move-down" onclick="moveCell('${cell.id}', 'down')" title="Переместить вниз">
+                    ↓
+                </button>
+                <button class="cell-btn delete" onclick="deleteCell('${cell.id}')" title="Удалить ячейку">
+                    ×
+                </button>
+            `;
+            
+            header.appendChild(typeDiv);
+            header.appendChild(controls);
+            cellElement.appendChild(header);
+            
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'cell-content-wrapper';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'cell-content';
+            contentDiv.contentEditable = true;
+            
+            if (cell.content) {
+                contentDiv.innerHTML = cell.content;
+            }
+            
+            contentWrapper.appendChild(contentDiv);
+            cellElement.appendChild(contentWrapper);
+            
+            contentDiv.addEventListener('focus', () => {
+                activateCell(cellElement);
+                updateToolbarState();
+            });
+            
+            contentDiv.addEventListener('click', () => {
+                activateCell(cellElement);
+                updateToolbarState();
+            });
+            
+            contentDiv.addEventListener('input', () => {
+                cell.content = contentDiv.innerHTML;
+                scheduleAutoSave(2000);
+                updateWordCount();
+            });
+            
+            contentDiv.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const index = cells.findIndex(c => c.id === cell.id);
+                    addCell(index + 1);
+                }
+            });
+            
+            return cellElement;
+        }
+
+        function activateCell(cellElement) {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('active');
+            });
+            cellElement.classList.add('active');
+        }
+
+        function deleteCell(cellId) {
+            if (!confirm('Удалить эту ячейку?')) return;
+            
+            const cellElement = document.getElementById(cellId);
+            if (cellElement) {
+                cellElement.remove();
+                cells = cells.filter(cell => cell.id !== cellId);
+                
+                const container = document.getElementById('cellsContainer');
+                const remainingCells = container.querySelectorAll('.cell').length;
+                const emptyMessage = document.getElementById('emptyMessage');
+                
+                if (remainingCells === 0 && emptyMessage) {
+                    emptyMessage.style.display = 'block';
+                }
+                
+                updateCellCount();
+                scheduleAutoSave(2000);
+            }
+        }
+
+        function moveCell(cellId, direction) {
+            const container = document.getElementById('cellsContainer');
+            const cellElements = Array.from(container.children)
+                .filter(el => el.classList.contains('cell'));
+            
+            const currentIndex = cellElements.findIndex(el => el.id === cellId);
+            if (currentIndex === -1) return;
+            
+            let newIndex;
+            if (direction === 'up' && currentIndex > 0) {
+                newIndex = currentIndex - 1;
+            } else if (direction === 'down' && currentIndex < cellElements.length - 1) {
+                newIndex = currentIndex + 1;
+            } else {
                 return;
             }
-
-            const filteredNotes = allNotes.filter(note => {
-                const title = note.title?.toLowerCase() || '';
-                const content = note.content?.replace(/<[^>]*>/g, '').toLowerCase() || '';
-                return title.includes(searchTerm) || content.includes(searchTerm);
-            });
-
-            displayNotes(filteredNotes);
-        }
-
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('clearSearch').style.display = 'none';
-            displayNotes(allNotes);
-        }
-
-        //CTRL+V 
-
-        function handlePaste(e) {
-            const items = e.clipboardData?.items;
-            if (!items) return;
-
-            for (let item of items) {
-                if (item.type.startsWith('image/')) {
-                    e.preventDefault();
-                    const file = item.getAsFile();
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            insertImageFromDataUrl(e.target.result);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    break;
-                }
-            }
-        }
-
-        function insertImageFromDataUrl(dataUrl) {
-            const img = document.createElement('img');
-            img.src = dataUrl;
-            img.alt = 'Вставленное изображение';
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            img.style.borderRadius = '8px';
-            img.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-            img.style.margin = '10px 0';
-
-            const container = document.createElement('div');
-            container.className = 'image-container left';
-            container.appendChild(img);
-            addImageControls(container);
-
-            const editor = document.getElementById('editorContent');
-            const selection = window.getSelection();
             
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.insertNode(container);
-                range.insertNode(document.createTextNode('\u00A0'));
+            const targetElement = cellElements[newIndex];
+            const cellElement = cellElements[currentIndex];
+            
+            if (newIndex < currentIndex) {
+                container.insertBefore(cellElement, targetElement);
             } else {
-                editor.appendChild(container);
-                editor.appendChild(document.createTextNode('\u00A0'));
+                container.insertBefore(cellElement, targetElement.nextSibling);
             }
+            
+            const cell = cells.find(c => c.id === cellId);
+            const cellIndex = cells.indexOf(cell);
+            cells.splice(cellIndex, 1);
+            cells.splice(newIndex, 0, cell);
+            
+            scheduleAutoSave(2000);
+        }
 
-            manualSave();
+        function clearAllCells() {
+            if (!confirm('Очистить все ячейки? Это действие нельзя отменить.')) return;
+            
+            const container = document.getElementById('cellsContainer');
+            container.innerHTML = '';
+            cells = [];
+            
+            const emptyMessage = document.getElementById('emptyMessage');
+            if (emptyMessage) {
+                emptyMessage.style.display = 'block';
+            }
+            
+            updateCellCount();
+            scheduleAutoSave(2000);
+        }
+
+        function updateCellCount() {
+            document.getElementById('cellCount').textContent = cells.length;
+        }
+
+        // DRAG & DROP
+        function startDrag(e) {
+            draggedCell = e.target.closest('.cell');
+            if (draggedCell) {
+                draggedCell.classList.add('dragging');
+                e.preventDefault();
+            }
+        }
+
+        function handleDrag(e) {
+            if (!draggedCell) return;
+            
+            const container = document.getElementById('cellsContainer');
+            const cells = Array.from(container.querySelectorAll('.cell:not(.dragging)'));
+            
+            const targetCell = cells.find(cell => {
+                const rect = cell.getBoundingClientRect();
+                return e.clientY <= rect.bottom && e.clientY >= rect.top;
+            });
+            
+            cells.forEach(cell => cell.classList.remove('drop-target'));
+            
+            if (targetCell) {
+                targetCell.classList.add('drop-target');
+            }
+        }
+
+        function stopDrag() {
+            if (!draggedCell) return;
+            
+            const container = document.getElementById('cellsContainer');
+            const targetCell = container.querySelector('.cell.drop-target');
+            
+            if (targetCell && targetCell !== draggedCell) {
+                container.insertBefore(draggedCell, targetCell);
+                updateCellsOrder();
+            }
+            
+            draggedCell.classList.remove('dragging');
+            container.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('drop-target');
+            });
+            
+            draggedCell = null;
+            scheduleAutoSave(2000);
+        }
+
+        function updateCellsOrder() {
+            const container = document.getElementById('cellsContainer');
+            const cellElements = Array.from(container.querySelectorAll('.cell'));
+            
+            cells.sort((a, b) => {
+                const indexA = cellElements.findIndex(el => el.id === a.id);
+                const indexB = cellElements.findIndex(el => el.id === b.id);
+                return indexA - indexB;
+            });
+        }
+
+        // ФУНКЦИИ РЕДАКТОРА
+        function formatText(command, value = null) {
+            const activeCell = document.querySelector('.cell.active .cell-content');
+            if (activeCell) {
+                activeCell.focus();
+                document.execCommand(command, false, value);
+                updateToolbarState();
+                scheduleAutoSave(2000);
+            }
+        }
+
+        function insertBulletList() {
+            formatText('insertUnorderedList');
+        }
+
+        function insertNumberedList() {
+            formatText('insertOrderedList');
+        }
+
+        function insertHeading(level) {
+            formatText('formatBlock', false, `<h${level}>`);
+        }
+
+        function insertBlockquote() {
+            formatText('formatBlock', false, '<blockquote>');
+        }
+
+        function insertCode() {
+            const activeCell = document.querySelector('.cell.active .cell-content');
+            if (activeCell) {
+                const selection = window.getSelection();
+                if (selection.toString()) {
+                    document.execCommand('formatBlock', false, '<pre>');
+                } else {
+                    document.execCommand('insertHTML', false, '<code>введите код</code>');
+                }
+                scheduleAutoSave(2000);
+            }
+        }
+
+        // ИСПРАВЛЕННЫЕ ФУНКЦИИ ДЛЯ ССЫЛОК
+        function insertLink() {
+            const selection = window.getSelection();
+            const selectedText = selection.toString();
+            
+            // Сохраняем текущую позицию курсора
+            saveCursorPosition();
+            
+            // Создаем новую ссылку
+            if (selectedText) {
+                document.getElementById('linkText').value = selectedText;
+            } else {
+                document.getElementById('linkText').value = '';
+            }
+            
+            showLinkModal();
+        }
+
+        function saveCursorPosition() {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                savedRange = selection.getRangeAt(0).cloneRange();
+            }
+        }
+
+        function restoreCursorPosition() {
+            if (savedRange) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(savedRange);
+                savedRange = null;
+            }
+        }
+
+        function showLinkModal(url = '', text = '') {
+            document.getElementById('linkUrl').value = url;
+            document.getElementById('linkText').value = text;
+            updateLinkPreview();
+            
+            document.getElementById('linkModal').style.display = 'flex';
             
             setTimeout(() => {
-                selectImage(img);
+                document.getElementById('linkUrl').focus();
             }, 100);
         }
 
-        function addImageControls(container) {
-            const oldControls = container.querySelector('.image-controls');
-            if (oldControls) {
-                oldControls.remove();
-            }
+        function hideLinkModal() {
+            document.getElementById('linkModal').style.display = 'none';
+            currentLinkElement = null;
+        }
 
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'image-control-btn delete';
-            deleteBtn.innerHTML = '×';
-            deleteBtn.title = 'Удалить изображение';
-            deleteBtn.onclick = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                deleteImage(container);
-            };
-
-            const controls = document.createElement('div');
-            controls.className = 'image-controls';
-            controls.appendChild(deleteBtn);
+        function updateLinkPreview() {
+            const url = document.getElementById('linkUrl').value.trim();
+            const text = document.getElementById('linkText').value.trim();
             
-            container.appendChild(controls);
+            let preview;
+            if (text) {
+                preview = `[[${url}|${text}]]`;
+            } else {
+                preview = `[[${url}]]`;
+            }
+            
+            document.getElementById('previewText').textContent = preview;
+        }
 
-            controls.addEventListener('click', function(e) {
-                e.stopPropagation();
+        function handleLinkSubmit(e) {
+            e.preventDefault();
+            
+            const url = document.getElementById('linkUrl').value.trim();
+            const text = document.getElementById('linkText').value.trim();
+            
+            if (!url) {
+                alert('Пожалуйста, введите URL ссылки');
+                return;
+            }
+            
+            // Создаем wiki-ссылку
+            let wikiLink;
+            if (text) {
+                wikiLink = `[[${url}|${text}]]`;
+            } else {
+                wikiLink = `[[${url}]]`;
+            }
+            
+            // Восстанавливаем позицию курсора
+            restoreCursorPosition();
+            
+            // Вставляем ссылку
+            document.execCommand('insertText', false, wikiLink);
+            
+            hideLinkModal();
+            scheduleAutoSave(2000);
+            
+            // Обновляем все ссылки в документе
+            setTimeout(renderWikiLinks, 100);
+        }
+
+        function renderWikiLinks() {
+            const cells = document.querySelectorAll('.cell-content');
+            cells.forEach(cell => {
+                const content = cell.innerHTML;
+                
+                // Регулярное выражение для поиска wiki-ссылок
+                const wikiLinkRegex = /\[\[([^\[\]\|]+)(?:\|([^\[\]]+))?\]\]/g;
+                
+                let newContent = content;
+                let match;
+                
+                while ((match = wikiLinkRegex.exec(content)) !== null) {
+                    const fullMatch = match[0];
+                    const url = match[1].trim();
+                    let text = match[2] ? match[2].trim() : url;
+                    
+                    // Определяем тип ссылки
+                    let linkClass = 'wiki-link';
+                    let icon = '';
+                    
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        linkClass += ' link-external';
+                        icon = '<span class="link-icon"></span>';
+                    } else if (url.startsWith('#') || url.startsWith('note:')) {
+                        linkClass += ' link-internal';
+                        icon = '<span class="link-icon"></span>';
+                    }
+                    
+                    // Проверяем, валидный ли URL
+                    let href = url;
+                    if (!url.includes('://') && !url.startsWith('#') && !url.startsWith('note:')) {
+                        if (!url.startsWith('mailto:') && !url.startsWith('tel:')) {
+                            href = 'http://' + url;
+                        }
+                    }
+                    
+                    // Добавляем неразрывный пробел после ссылки
+                    const linkHtml = `<span class="${linkClass}" data-url="${href}" data-original-url="${url}" data-text="${text}" onclick="handleLinkClick(event)" oncontextmenu="showLinkContextMenu(event)">${icon}${text}</span>&#8203;`;
+                    
+                    newContent = newContent.replace(fullMatch, linkHtml);
+                }
+                
+                if (newContent !== content) {
+                    cell.innerHTML = newContent;
+                }
             });
         }
 
-        function selectImage(imgElement) {
-            deselectImage();
-            selectedImageElement = imgElement;
-            const container = imgElement.closest('.image-container');
-            if (container) {
-                container.classList.add('selected');
-            }
+        function handleLinkClick(event) {
+            event.preventDefault();
+            event.stopPropagation();
             
-            document.getElementById('deleteImageBtn').style.display = 'flex';
-            document.getElementById('alignmentControls').style.display = 'flex';
-        }
-
-        function deselectImage() {
-            if (selectedImageElement) {
-                const container = selectedImageElement.closest('.image-container');
-                if (container) {
-                    container.classList.remove('selected');
-                }
-                selectedImageElement = null;
-            }
-            document.getElementById('deleteImageBtn').style.display = 'none';
-            document.getElementById('alignmentControls').style.display = 'none';
-        }
-
-        function deleteSelectedImage() {
-            if (selectedImageElement) {
-                const container = selectedImageElement.closest('.image-container');
-                if (container) {
-                    deleteImage(container);
+            const link = event.currentTarget;
+            const url = link.getAttribute('data-url');
+            const originalUrl = link.getAttribute('data-original-url');
+            
+            link.classList.add('active');
+            setTimeout(() => {
+                link.classList.remove('active');
+            }, 300);
+            
+            if (originalUrl && !originalUrl.includes('://') && !originalUrl.startsWith('#') && 
+                !originalUrl.startsWith('mailto:') && !originalUrl.startsWith('tel:')) {
+                searchAndOpenNote(originalUrl);
+            } else {
+                if (url.startsWith('#')) {
+                    const target = document.querySelector(url);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } else {
+                    window.open(url, '_blank', 'noopener,noreferrer');
                 }
             }
+            
+            // Восстанавливаем фокус на ячейке
+            setTimeout(() => {
+                const cell = link.closest('.cell');
+                if (cell) {
+                    const content = cell.querySelector('.cell-content');
+                    if (content) {
+                        // Устанавливаем курсор после ссылки
+                        const range = document.createRange();
+                        range.setStartAfter(link);
+                        range.collapse(true);
+                        
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        
+                        content.focus();
+                    }
+                }
+            }, 100);
         }
 
-        function deleteImage(container) {
-            if (confirm('Удалить это изображение?')) {
-                container.remove();
-                manualSave();
-                deselectImage();
+        async function searchAndOpenNote(noteName) {
+            try {
+                const { data: notes, error } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .ilike('title', `%${noteName}%`);
+                
+                if (error) throw error;
+                
+                if (notes && notes.length > 0) {
+                    await openNote(notes[0].id);
+                    showNotification(`Открыт конспект: ${notes[0].title}`, 'success');
+                } else {
+                    showNotification(`Конспект "${noteName}" не найден`, 'warning');
+                }
+            } catch (error) {
+                console.error('Ошибка поиска конспекта:', error);
+                showNotification('Ошибка поиска конспекта', 'error');
             }
         }
 
-        function setImageAlignment(alignment) {
-            if (!selectedImageElement) return;
+        function showLinkContextMenu(event) {
+            event.preventDefault();
+            event.stopPropagation();
             
-            const container = selectedImageElement.closest('.image-container');
-            if (!container) return;
+            currentLinkElement = event.currentTarget;
+            
+            const menu = document.getElementById('linkContextMenu');
+            menu.style.display = 'block';
+            menu.style.left = event.pageX + 'px';
+            menu.style.top = event.pageY + 'px';
+            
+            linkContextMenuVisible = true;
+            
+            setTimeout(() => {
+                document.addEventListener('click', closeLinkContextMenu);
+            }, 100);
+        }
 
-            container.classList.remove('left', 'right', 'center');
-            
-            if (alignment !== 'inline') {
-                container.classList.add(alignment);
+        function closeLinkContextMenu() {
+            if (linkContextMenuVisible) {
+                document.getElementById('linkContextMenu').style.display = 'none';
+                linkContextMenuVisible = false;
+                document.removeEventListener('click', closeLinkContextMenu);
             }
+        }
 
-            document.querySelectorAll('.alignment-btn').forEach(btn => {
-                btn.classList.remove('active');
+        function openLink() {
+            if (currentLinkElement) {
+                currentLinkElement.click();
+            }
+            closeLinkContextMenu();
+        }
+
+        function editSelectedLink() {
+            if (currentLinkElement) {
+                const url = currentLinkElement.getAttribute('data-original-url');
+                const text = currentLinkElement.getAttribute('data-text');
+                
+                // Сохраняем позицию для восстановления
+                saveCursorPosition();
+                
+                // Показываем модальное окно
+                showLinkModal(url, text);
+            }
+            closeLinkContextMenu();
+        }
+
+        function copyLink() {
+            if (currentLinkElement) {
+                const url = currentLinkElement.getAttribute('data-url');
+                navigator.clipboard.writeText(url)
+                    .then(() => {
+                        showNotification('Ссылка скопирована в буфер обмена', 'success');
+                    })
+                    .catch(err => {
+                        console.error('Ошибка копирования:', err);
+                        showNotification('Ошибка копирования ссылки', 'error');
+                    });
+            }
+            closeLinkContextMenu();
+        }
+
+        function removeLink() {
+            if (currentLinkElement) {
+                if (confirm('Удалить эту ссылку?')) {
+                    // Заменяем ссылку на её текст
+                    const text = currentLinkElement.textContent;
+                    const textNode = document.createTextNode(text);
+                    
+                    currentLinkElement.parentNode.replaceChild(textNode, currentLinkElement);
+                    
+                    // Восстанавливаем курсор после текста
+                    const range = document.createRange();
+                    range.setStartAfter(textNode);
+                    range.collapse(true);
+                    
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    
+                    scheduleAutoSave(2000);
+                }
+            }
+            closeLinkContextMenu();
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'var(--success-color)' : 
+                            type === 'warning' ? 'var(--warning-color)' : 
+                            type === 'error' ? 'var(--accent-color)' : 'var(--primary-color)'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: var(--shadow);
+                z-index: 2000;
+                animation: slideIn 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function updateToolbarState() {
+            const activeCell = document.querySelector('.cell.active .cell-content');
+            if (!activeCell) return;
+            
+            activeCell.focus();
+            const commands = ['bold', 'italic', 'underline', 'strikeThrough'];
+            commands.forEach(command => {
+                const isActive = document.queryCommandState(command);
+                const buttons = document.querySelectorAll(`.format-btn[onclick*="${command}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', isActive);
+                });
             });
-            event.target.classList.add('active');
-
-            manualSave();
         }
 
-        // Автосейв
-
-        function scheduleAutoSave(delay = 2000) {
-            if (autoSaveTimer) {
-                clearTimeout(autoSaveTimer);
-            }
-            autoSaveTimer = setTimeout(() => {
-                saveCurrentNote(true);
-            }, delay);
+        function updateWordCount() {
+            let totalWords = 0;
+            let totalChars = 0;
+            
+            cells.forEach(cell => {
+                const text = cell.content.replace(/<[^>]*>/g, '');
+                totalWords += text.trim() ? text.trim().split(/\s+/).length : 0;
+                totalChars += text.length;
+            });
+            
+            document.getElementById('wordCount').textContent = 
+                `Слов: ${totalWords} | Символов: ${totalChars}`;
         }
 
-        function manualSave() {
-            saveCurrentNote(false);
-        }
-
+        // СОХРАНЕНИЕ И ЗАГРУЗКА
         async function saveCurrentNote(isAutoSave = false) {
             if (!currentNoteId || !currentUser) return;
 
             const title = document.getElementById('noteTitle').value.trim();
-            const content = document.getElementById('editorContent').innerHTML;
+            
+            const cellsData = cells.map(cell => {
+                let content = cell.content;
+                
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                
+                const links = tempDiv.querySelectorAll('.wiki-link');
+                links.forEach(link => {
+                    const url = link.getAttribute('data-original-url');
+                    const text = link.getAttribute('data-text');
+                    
+                    let wikiFormat;
+                    if (text && text !== url) {
+                        wikiFormat = `[[${url}|${text}]]`;
+                    } else {
+                        wikiFormat = `[[${url}]]`;
+                    }
+                    
+                    link.outerHTML = wikiFormat;
+                });
+                
+                return {
+                    id: cell.id,
+                    content: tempDiv.innerHTML,
+                    metadata: cell.metadata
+                };
+            });
 
-            if (title === lastSavedTitle && content === lastSavedContent) {
-                if (!isAutoSave) {
-                    showSaveIndicator('Нет изменений для сохранения');
+            const noteData = {
+                title: title,
+                content: JSON.stringify(cellsData),
+                updated_at: new Date().toISOString(),
+                metadata: {
+                    cell_count: cells.length,
+                    format: 'notebook'
                 }
-                return;
-            }
-
-            if (!title) {
-                if (!isAutoSave) {
-                    alert('Название конспекта не может быть пустым');
-                    document.getElementById('noteTitle').focus();
-                }
-                return;
-            }
+            };
 
             try {
                 if (!isAutoSave) {
@@ -1500,17 +2223,13 @@
                 
                 const { error } = await supabase
                     .from('notes')
-                    .update({
-                        title: title,
-                        content: content,
-                        updated_at: new Date().toISOString()
-                    })
+                    .update(noteData)
                     .eq('id', currentNoteId);
 
                 if (error) throw error;
 
                 lastSavedTitle = title;
-                lastSavedContent = content;
+                lastSavedContent = JSON.stringify(cellsData);
 
                 if (!isAutoSave) {
                     await loadNotes();
@@ -1526,6 +2245,99 @@
             }
         }
 
+        async function openNote(noteId) {
+            try {
+                if (currentNoteId && currentNoteId !== noteId) {
+                    await saveCurrentNote(true);
+                }
+
+                isSwitchingNotes = true;
+
+                const { data: note, error } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .eq('id', noteId)
+                    .single();
+
+                if (error) throw error;
+
+                currentNoteId = noteId;
+                
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                const activeNoteElement = document.querySelector(`[onclick*="${noteId}"]`);
+                if (activeNoteElement) {
+                    activeNoteElement.classList.add('active');
+                }
+
+                document.getElementById('noteTitle').value = note.title || '';
+                
+                const container = document.getElementById('cellsContainer');
+                container.innerHTML = '';
+                
+                cells = [];
+                cellIdCounter = 0;
+                
+                try {
+                    if (note.content) {
+                        const cellsData = JSON.parse(note.content);
+                        if (Array.isArray(cellsData)) {
+                            cellsData.forEach(cellData => {
+                                const cellElement = createCellElement(cellData);
+                                container.appendChild(cellElement);
+                                cells.push(cellData);
+                                cellIdCounter = Math.max(cellIdCounter, parseInt(cellData.id.split('_')[2]) || 0);
+                            });
+                        }
+                    }
+                } catch (e) {
+                    if (note.content) {
+                        const cell = {
+                            id: `cell_${Date.now()}_0`,
+                            content: note.content,
+                            metadata: {}
+                        };
+                        const cellElement = createCellElement(cell);
+                        container.appendChild(cellElement);
+                        cells.push(cell);
+                    }
+                }
+                
+                const emptyMessage = document.getElementById('emptyMessage');
+                if (emptyMessage && cells.length > 0) {
+                    emptyMessage.style.display = 'none';
+                }
+                
+                showEditorInterface();
+                updateCellCount();
+                updateWordCount();
+                updateStatus('Конспект загружен');
+                
+                setTimeout(renderWikiLinks, 100);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки конспекта:', error);
+                alert('Ошибка загрузки конспекта');
+            } finally {
+                isSwitchingNotes = false;
+            }
+        }
+
+        function scheduleAutoSave(delay = 2000) {
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            autoSaveTimer = setTimeout(() => {
+                saveCurrentNote(true);
+            }, delay);
+        }
+
+        function manualSave() {
+            saveCurrentNote(false);
+        }
+
         function showSaveIndicator(message) {
             const indicator = document.getElementById('saveIndicator');
             indicator.textContent = message;
@@ -1536,8 +2348,11 @@
             }, 2000);
         }
 
-        // авторизация
+        function updateStatus(message) {
+            document.getElementById('statusInfo').textContent = message;
+        }
 
+        // АВТОРИЗАЦИЯ
         async function checkAuth() {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
@@ -1662,6 +2477,7 @@
                 await supabase.auth.signOut();
                 currentUser = null;
                 currentNoteId = null;
+                cells = [];
                 showLogin();
             }
         }
@@ -1674,14 +2490,10 @@
             }
         }
 
-        // конпекты создание поиск сохранени и прчее
-
         async function loadNotes() {
             if (!currentUser) return;
 
             try {
-                showLoadingState(true);
-                
                 const { data: notes, error } = await supabase
                     .from('notes')
                     .select('*')
@@ -1693,7 +2505,6 @@
                 allNotes = notes || [];
                 displayNotes(allNotes);
                 
-                // Показываем экран приветствия если нет конспектов
                 if (allNotes.length === 0 && !currentNoteId) {
                     showWelcomeScreen();
                 }
@@ -1702,8 +2513,6 @@
                 console.error('Ошибка загрузки конспектов:', error);
                 document.getElementById('notesList').innerHTML = 
                     '<div class="info-message">Ошибка загрузки конспектов</div>';
-            } finally {
-                showLoadingState(false);
             }
         }
 
@@ -1729,8 +2538,15 @@
                 const noteElement = document.createElement('div');
                 noteElement.className = `note-item fade-in ${note.id === currentNoteId ? 'active' : ''}`;
                 
-                const preview = note.content ? 
-                    note.content.replace(/<[^>]*>/g, '').substring(0, 120) : '';
+                let preview = '';
+                try {
+                    const cellsData = JSON.parse(note.content);
+                    if (Array.isArray(cellsData) && cellsData.length > 0) {
+                        preview = cellsData[0].content.replace(/<[^>]*>/g, '').substring(0, 120);
+                    }
+                } catch (e) {
+                    preview = note.content.replace(/<[^>]*>/g, '').substring(0, 120);
+                }
                 
                 noteElement.innerHTML = `
                     <button class="delete-note" onclick="event.stopPropagation(); deleteNote('${note.id}')" title="Удалить">
@@ -1760,7 +2576,7 @@
                 const newNote = {
                     user_id: currentUser.id,
                     title: 'Новый конспект',
-                    content: '',
+                    content: JSON.stringify([]),
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 };
@@ -1784,52 +2600,6 @@
             }
         }
 
-        async function openNote(noteId) {
-            try {
-                if (currentNoteId && currentNoteId !== noteId) {
-                    await saveCurrentNote(true);
-                }
-
-                isSwitchingNotes = true;
-
-                const { data: note, error } = await supabase
-                    .from('notes')
-                    .select('*')
-                    .eq('id', noteId)
-                    .single();
-
-                if (error) throw error;
-
-                currentNoteId = noteId;
-                
-                document.querySelectorAll('.note-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                const activeNoteElement = document.querySelector(`[onclick*="${noteId}"]`);
-                if (activeNoteElement) {
-                    activeNoteElement.classList.add('active');
-                }
-
-                showEditorInterface();
-
-                document.getElementById('noteTitle').value = note.title || '';
-                document.getElementById('editorContent').innerHTML = note.content || '';
-                
-                lastSavedTitle = note.title || '';
-                lastSavedContent = note.content || '';
-                
-                updateWordCount();
-                updateStatus('Конспект загружен');
-                
-            } catch (error) {
-                console.error('Ошибка загрузки конспекта:', error);
-                alert('Ошибка загрузки конспекта');
-            } finally {
-                isSwitchingNotes = false;
-            }
-        }
-
         async function deleteNote(noteId) {
             if (!confirm('Вы уверены, что хотите удалить этот конспект? Это действие нельзя отменить.')) {
                 return;
@@ -1846,12 +2616,16 @@
                 if (currentNoteId === noteId) {
                     currentNoteId = null;
                     document.getElementById('noteTitle').value = '';
-                    document.getElementById('editorContent').innerHTML = '';
-                    lastSavedTitle = '';
-                    lastSavedContent = '';
-                    updateWordCount();
-
-                    if (allNotes.length === 1) { 
+                    const container = document.getElementById('cellsContainer');
+                    container.innerHTML = '';
+                    cells = [];
+                    
+                    const emptyMessage = document.getElementById('emptyMessage');
+                    if (emptyMessage) {
+                        emptyMessage.style.display = 'block';
+                    }
+                    
+                    if (allNotes.length === 1) {
                         showWelcomeScreen();
                     }
                 }
@@ -1865,112 +2639,46 @@
             }
         }
 
-        // фции редактора
-
-        function formatText(command, value = null) {
-            document.execCommand(command, false, value);
-            document.getElementById('editorContent').focus();
-            updateToolbarState();
-            scheduleAutoSave(3000);
-        }
-
-        function insertBulletList() {
-            document.execCommand('insertUnorderedList', false, null);
-            scheduleAutoSave(3000);
-        }
-
-        function insertNumberedList() {
-            document.execCommand('insertOrderedList', false, null);
-            scheduleAutoSave(3000);
-        }
-
-        function insertHeading(level) {
-            document.execCommand('formatBlock', false, `<h${level}>`);
-            scheduleAutoSave(3000);
-        }
-
-        function insertBlockquote() {
-            document.execCommand('formatBlock', false, '<blockquote>');
-            scheduleAutoSave(3000);
-        }
-
-        function insertCode() {
-            const selection = window.getSelection();
-            if (selection.toString()) {
-                document.execCommand('formatBlock', false, '<pre>');
-            } else {
-                document.execCommand('insertHTML', false, '<code>введите код</code>');
-            }
-            scheduleAutoSave(3000);
-        }
-
-        
-        function insertLink() {
-            const url = prompt('Введите URL ссылки:', 'https://');
-            if (url) {
-                const text = window.getSelection().toString() || 'Ссылка';
-                document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener">${text}</a>`);
-                scheduleAutoSave(3000);
-            }
-        }
-
-        function handleEnterKey(e) {
-            const selection = window.getSelection();
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                const listItem = range.startContainer.parentElement;
-                
-                if (listItem.tagName === 'LI' && listItem.textContent === '') {
-                    e.preventDefault();
-                    document.execCommand('outdent', false, null);
-                    return;
-                }
-            }
-        }
-
-        function updateToolbarState() {
-            const commands = ['bold', 'italic', 'underline', 'strikeThrough'];
-            commands.forEach(command => {
-                const isActive = document.queryCommandState(command);
-                const buttons = document.querySelectorAll(`.format-btn[onclick*="${command}"]`);
-                buttons.forEach(btn => {
-                    btn.classList.toggle('active', isActive);
-                });
-            });
-
-            const alignments = ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'];
-            alignments.forEach(alignment => {
-                if (document.queryCommandState(alignment)) {
-                    document.querySelectorAll('.format-btn[onclick*="justify"]').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    const activeBtn = document.querySelector(`.format-btn[onclick*="${alignment}"]`);
-                    if (activeBtn) activeBtn.classList.add('active');
-                }
-            });
-        }
-
-        function updateWordCount() {
-            const text = document.getElementById('editorContent').innerText || '';
-            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-            const characters = text.length;
+        function searchNotes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const clearSearchBtn = document.getElementById('clearSearch');
             
-            document.getElementById('wordCount').textContent = 
-                `Слов: ${words} | Символов: ${characters}`;
-        }
-
-        function updateStatus(message) {
-            document.getElementById('statusInfo').textContent = message;
-        }
-
-
-        function showLoadingState(show) {
-            const app = document.getElementById('mainApp');
-            if (show) {
-                app.classList.add('loading');
+            if (searchTerm.length > 0) {
+                clearSearchBtn.style.display = 'block';
             } else {
-                app.classList.remove('loading');
+                clearSearchBtn.style.display = 'none';
             }
+            
+            if (!searchTerm.trim()) {
+                displayNotes(allNotes);
+                return;
+            }
+
+            const filteredNotes = allNotes.filter(note => {
+                const title = note.title?.toLowerCase() || '';
+                const content = note.content?.replace(/<[^>]*>/g, '').toLowerCase() || '';
+                return title.includes(searchTerm) || content.includes(searchTerm);
+            });
+
+            displayNotes(filteredNotes);
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearch').style.display = 'none';
+            displayNotes(allNotes);
+        }
+
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').style.display = 'flex';
+            document.getElementById('editorInterface').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'none';
+        }
+
+        function showEditorInterface() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('editorInterface').style.display = 'flex';
+            document.getElementById('saveBtn').style.display = 'flex';
         }
 
         function escapeHtml(unsafe) {
@@ -2030,7 +2738,4 @@
         }
     </script>
 </body>
-
 </html>
-
-
