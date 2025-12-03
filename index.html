@@ -1608,6 +1608,7 @@
             });
             
             contentDiv.addEventListener('input', () => {
+                // УБРАЛИ metadata из объекта ячейки
                 cell.content = contentDiv.innerHTML;
                 scheduleAutoSave(2000);
                 updateWordCount();
@@ -2181,6 +2182,7 @@
             const cellsData = cells.map(cell => {
                 let content = cell.content;
                 
+                // Конвертируем отрендеренные ссылки обратно в wiki-формат
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = content;
                 
@@ -2201,19 +2203,15 @@
                 
                 return {
                     id: cell.id,
-                    content: tempDiv.innerHTML,
-                    metadata: cell.metadata
+                    content: tempDiv.innerHTML
                 };
             });
 
             const noteData = {
                 title: title,
                 content: JSON.stringify(cellsData),
-                updated_at: new Date().toISOString(),
-                metadata: {
-                    cell_count: cells.length,
-                    format: 'notebook'
-                }
+                updated_at: new Date().toISOString()
+                // УБРАЛИ metadata из запроса
             };
 
             try {
@@ -2285,19 +2283,23 @@
                         const cellsData = JSON.parse(note.content);
                         if (Array.isArray(cellsData)) {
                             cellsData.forEach(cellData => {
-                                const cellElement = createCellElement(cellData);
+                                // УБРАЛИ metadata при создании ячейки
+                                const cell = {
+                                    id: cellData.id || `cell_${Date.now()}_${cellIdCounter++}`,
+                                    content: cellData.content || ''
+                                };
+                                const cellElement = createCellElement(cell);
                                 container.appendChild(cellElement);
-                                cells.push(cellData);
-                                cellIdCounter = Math.max(cellIdCounter, parseInt(cellData.id.split('_')[2]) || 0);
+                                cells.push(cell);
                             });
                         }
                     }
                 } catch (e) {
+                    console.log('Загрузка в старом формате:', e);
                     if (note.content) {
                         const cell = {
                             id: `cell_${Date.now()}_0`,
-                            content: note.content,
-                            metadata: {}
+                            content: note.content
                         };
                         const cellElement = createCellElement(cell);
                         container.appendChild(cellElement);
