@@ -519,7 +519,21 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
+        .btn btn-secondary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
 
+        
         .add-cell-btn:hover {
             background: #2980b9;
             transform: translateY(-2px);
@@ -1209,7 +1223,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно для ссылок -->
     <div id="linkModal" class="link-modal">
         <div class="link-modal-content">
             <h3 style="margin-bottom: 20px; color: var(--secondary-color);">📎 Вставить/Редактировать ссылку</h3>
@@ -1245,7 +1258,6 @@
         </div>
     </div>
 
-    <!-- Контекстное меню для ссылок -->
     <div id="linkContextMenu" class="link-context-menu">
         <div class="link-context-item" onclick="openLink()">
             <span>🔗</span> Перейти по ссылке
@@ -1261,7 +1273,6 @@
         </div>
     </div>
 
-    <!-- Основное приложение -->
     <div id="mainApp">
         <div class="header">
             <div class="header-left">
@@ -1288,7 +1299,6 @@
         </div>
 
         <div class="main-container">
-            <!-- Боковая панель -->
             <div class="sidebar">
                 <div class="sidebar-header">
                     <input type="text" class="search-input" placeholder="🔍 Поиск конспектов..." id="searchInput">
@@ -1301,10 +1311,8 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Редактор с ячейками -->
+            
             <div class="editor">
-                <!-- Экран приветствия -->
                 <div class="welcome-screen" id="welcomeScreen">
                     <div class="welcome-icon">📚</div>
                     <h1 class="welcome-title">Добро пожаловать в Умные конспекты!</h1>
@@ -1317,7 +1325,7 @@
                     </button>
                 </div>
 
-                <!-- Интерфейс редактора -->
+           
                 <div id="editorInterface" style="display: none; height: 100%; flex-direction: column;">
                     <div class="editor-header">
                         <input type="text" class="editor-title" placeholder="Введите название конспекта..." id="noteTitle">
@@ -1326,7 +1334,7 @@
                         </button>
                     </div>
                     
-                    <!-- Панель ячеек --> 
+             
                     <div class="cell-toolbar">
                         <button class="add-cell-btn" onclick="addCell()">
                             ➕ Добавить ячейку
@@ -1339,7 +1347,7 @@
                         </span>
                     </div>
                     
-                    <!-- Панель форматирования -->
+        
                     <div class="editor-toolbar" id="editorToolbar">
                         <div class="toolbar-group">
                             <select class="font-select" onchange="formatText('fontName', this.value)">
@@ -2827,3 +2835,4 @@
     </script>
 </body>
 </html>
+
