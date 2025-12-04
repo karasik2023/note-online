@@ -689,6 +689,9 @@
             justify-content: center;
             transition: all 0.2s ease;
             flex-shrink: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
         .format-btn:hover {
@@ -703,6 +706,11 @@
             color: white;
             border-color: var(--primary-color);
             box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .format-btn:active {
+            transform: scale(0.95);
+            transition: transform 0.1s;
         }
 
         .font-select, .size-select {
@@ -1124,6 +1132,38 @@
         .hidden {
             display: none !important;
         }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .notification-success {
+            background: var(--success-color);
+        }
+
+        .notification-warning {
+            background: var(--warning-color);
+        }
+
+        .notification-error {
+            background: var(--accent-color);
+        }
+
+        .notification-info {
+            background: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -1286,7 +1326,7 @@
                         </button>
                     </div>
                     
-                    <!-- Панель ячеек -->
+                    <!-- Панель ячеек --> 
                     <div class="cell-toolbar">
                         <button class="add-cell-btn" onclick="addCell()">
                             ➕ Добавить ячейку
@@ -1410,6 +1450,7 @@
         let currentLinkElement = null;
         let linkContextMenuVisible = false;
         let savedRange = null;
+        let updateToolbarTimeout = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
@@ -1599,16 +1640,15 @@
             
             contentDiv.addEventListener('focus', () => {
                 activateCell(cellElement);
-                updateToolbarState();
+                debouncedUpdateToolbarState();
             });
             
             contentDiv.addEventListener('click', () => {
                 activateCell(cellElement);
-                updateToolbarState();
+                debouncedUpdateToolbarState();
             });
             
             contentDiv.addEventListener('input', () => {
-                // УБРАЛИ metadata из объекта ячейки
                 cell.content = contentDiv.innerHTML;
                 scheduleAutoSave(2000);
                 updateWordCount();
@@ -1765,15 +1805,66 @@
             });
         }
 
-        // ФУНКЦИИ РЕДАКТОРА
+        // ИСПРАВЛЕННЫЕ ФУНКЦИИ РЕДАКТОРА
         function formatText(command, value = null) {
-            const activeCell = document.querySelector('.cell.active .cell-content');
-            if (activeCell) {
-                activeCell.focus();
-                document.execCommand(command, false, value);
-                updateToolbarState();
+            try {
+                const activeCell = document.querySelector('.cell.active .cell-content');
+                if (!activeCell) {
+                    console.warn('Нет активной ячейки для форматирования');
+                    return;
+                }
+                
+                // Сохраняем текущую позицию курсора
+                const selection = window.getSelection();
+                const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+                
+                // Сохраняем состояние фокуса
+                const hasFocus = document.activeElement === activeCell;
+                
+                // Выполняем команду
+                const success = document.execCommand(command, false, value);
+                
+                if (!success) {
+                    console.warn(`Команда ${command} не выполнена`);
+                }
+                
+                // Восстанавливаем позицию курсора и фокус
+                if (range && selection.rangeCount === 0) {
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+                
+                if (hasFocus) {
+                    activeCell.focus();
+                }
+                
+                // Обновляем тулбар с debounce
+                debouncedUpdateToolbarState();
                 scheduleAutoSave(2000);
+                
+            } catch (error) {
+                console.error('Ошибка форматирования:', error);
             }
+        }
+
+        function debouncedUpdateToolbarState() {
+            clearTimeout(updateToolbarTimeout);
+            updateToolbarTimeout = setTimeout(updateToolbarState, 50);
+        }
+
+        function updateToolbarState() {
+            const activeCell = document.querySelector('.cell.active .cell-content');
+            if (!activeCell) return;
+            
+            // Проверяем состояния команд без изменения фокуса
+            const commands = ['bold', 'italic', 'underline', 'strikeThrough'];
+            commands.forEach(command => {
+                const isActive = document.queryCommandState(command);
+                const buttons = document.querySelectorAll(`.format-btn[onclick*="${command}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', isActive);
+                });
+            });
         }
 
         function insertBulletList() {
@@ -1785,11 +1876,23 @@
         }
 
         function insertHeading(level) {
-            formatText('formatBlock', false, `<h${level}>`);
+            const activeCell = document.querySelector('.cell.active .cell-content');
+            if (activeCell) {
+                activeCell.focus();
+                document.execCommand('formatBlock', false, `<h${level}>`);
+                updateToolbarState();
+                scheduleAutoSave(2000);
+            }
         }
 
         function insertBlockquote() {
-            formatText('formatBlock', false, '<blockquote>');
+            const activeCell = document.querySelector('.cell.active .cell-content');
+            if (activeCell) {
+                activeCell.focus();
+                document.execCommand('formatBlock', false, '<blockquote>');
+                updateToolbarState();
+                scheduleAutoSave(2000);
+            }
         }
 
         function insertCode() {
@@ -2144,21 +2247,6 @@
             }, 3000);
         }
 
-        function updateToolbarState() {
-            const activeCell = document.querySelector('.cell.active .cell-content');
-            if (!activeCell) return;
-            
-            activeCell.focus();
-            const commands = ['bold', 'italic', 'underline', 'strikeThrough'];
-            commands.forEach(command => {
-                const isActive = document.queryCommandState(command);
-                const buttons = document.querySelectorAll(`.format-btn[onclick*="${command}"]`);
-                buttons.forEach(btn => {
-                    btn.classList.toggle('active', isActive);
-                });
-            });
-        }
-
         function updateWordCount() {
             let totalWords = 0;
             let totalChars = 0;
@@ -2211,7 +2299,6 @@
                 title: title,
                 content: JSON.stringify(cellsData),
                 updated_at: new Date().toISOString()
-                // УБРАЛИ metadata из запроса
             };
 
             try {
@@ -2283,7 +2370,6 @@
                         const cellsData = JSON.parse(note.content);
                         if (Array.isArray(cellsData)) {
                             cellsData.forEach(cellData => {
-                                // УБРАЛИ metadata при создании ячейки
                                 const cell = {
                                     id: cellData.id || `cell_${Date.now()}_${cellIdCounter++}`,
                                     content: cellData.content || ''
