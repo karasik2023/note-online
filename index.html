@@ -1416,7 +1416,7 @@
                         </div>
                     </div>
 
-                    <!-- Статус бар -->
+            
                     <div class="status-bar">
                         <div id="statusInfo">Готов к работе</div>
                         <div id="wordCount">Слов: 0</div>
@@ -1800,7 +1800,6 @@
             });
         }
 
-        // ИСПРАВЛЕННЫЕ ФУНКЦИИ РЕДАКТОРА
         function formatText(command, value = null) {
             try {
                 const activeCell = document.querySelector('.cell.active .cell-content');
@@ -1809,21 +1808,18 @@
                     return;
                 }
                 
-                // Сохраняем текущую позицию курсора
+        
                 const selection = window.getSelection();
                 const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-                
-                // Сохраняем состояние фокуса
+ 
                 const hasFocus = document.activeElement === activeCell;
                 
-                // Выполняем команду
                 const success = document.execCommand(command, false, value);
                 
                 if (!success) {
                     console.warn(`Команда ${command} не выполнена`);
                 }
                 
-                // Восстанавливаем позицию курсора и фокус
                 if (range && selection.rangeCount === 0) {
                     selection.removeAllRanges();
                     selection.addRange(range);
@@ -1833,7 +1829,6 @@
                     activeCell.focus();
                 }
                 
-                // Обновляем тулбар с debounce
                 debouncedUpdateToolbarState();
                 scheduleAutoSave(2000);
                 
@@ -1851,7 +1846,6 @@
             const activeCell = document.querySelector('.cell.active .cell-content');
             if (!activeCell) return;
             
-            // Проверяем состояния команд без изменения фокуса
             const commands = ['bold', 'italic', 'underline', 'strikeThrough'];
             commands.forEach(command => {
                 const isActive = document.queryCommandState(command);
@@ -1903,15 +1897,14 @@
             }
         }
 
-        // ИСПРАВЛЕННЫЕ ФУНКЦИИ ДЛЯ ССЫЛОК
+       
         function insertLink() {
             const selection = window.getSelection();
             const selectedText = selection.toString();
             
-            // Сохраняем текущую позицию курсора
+           
             saveCursorPosition();
             
-            // Создаем новую ссылку
             if (selectedText) {
                 document.getElementById('linkText').value = selectedText;
             } else {
@@ -1978,8 +1971,7 @@
                 alert('Пожалуйста, введите URL ссылки');
                 return;
             }
-            
-            // Создаем wiki-ссылку
+
             let wikiLink;
             if (text) {
                 wikiLink = `[[${url}|${text}]]`;
@@ -1987,16 +1979,16 @@
                 wikiLink = `[[${url}]]`;
             }
             
-            // Восстанавливаем позицию курсора
+         
             restoreCursorPosition();
             
-            // Вставляем ссылку
+       
             document.execCommand('insertText', false, wikiLink);
             
             hideLinkModal();
             scheduleAutoSave(2000);
             
-            // Обновляем все ссылки в документе
+        
             setTimeout(renderWikiLinks, 100);
         }
 
@@ -2004,8 +1996,7 @@
             const cells = document.querySelectorAll('.cell-content');
             cells.forEach(cell => {
                 const content = cell.innerHTML;
-                
-                // Регулярное выражение для поиска wiki-ссылок
+            
                 const wikiLinkRegex = /\[\[([^\[\]\|]+)(?:\|([^\[\]]+))?\]\]/g;
                 
                 let newContent = content;
@@ -2016,7 +2007,7 @@
                     const url = match[1].trim();
                     let text = match[2] ? match[2].trim() : url;
                     
-                    // Определяем тип ссылки
+                  
                     let linkClass = 'wiki-link';
                     let icon = '';
                     
@@ -2028,7 +2019,7 @@
                         icon = '<span class="link-icon"></span>';
                     }
                     
-                    // Проверяем, валидный ли URL
+                  
                     let href = url;
                     if (!url.includes('://') && !url.startsWith('#') && !url.startsWith('note:')) {
                         if (!url.startsWith('mailto:') && !url.startsWith('tel:')) {
@@ -2036,7 +2027,7 @@
                         }
                     }
                     
-                    // Добавляем неразрывный пробел после ссылки
+                    
                     const linkHtml = `<span class="${linkClass}" data-url="${href}" data-original-url="${url}" data-text="${text}" onclick="handleLinkClick(event)" oncontextmenu="showLinkContextMenu(event)">${icon}${text}</span>&#8203;`;
                     
                     newContent = newContent.replace(fullMatch, linkHtml);
@@ -2075,13 +2066,13 @@
                 }
             }
             
-            // Восстанавливаем фокус на ячейке
+
             setTimeout(() => {
                 const cell = link.closest('.cell');
                 if (cell) {
                     const content = cell.querySelector('.cell-content');
                     if (content) {
-                        // Устанавливаем курсор после ссылки
+                    
                         const range = document.createRange();
                         range.setStartAfter(link);
                         range.collapse(true);
@@ -2156,10 +2147,10 @@
                 const url = currentLinkElement.getAttribute('data-original-url');
                 const text = currentLinkElement.getAttribute('data-text');
                 
-                // Сохраняем позицию для восстановления
+              
                 saveCursorPosition();
                 
-                // Показываем модальное окно
+          
                 showLinkModal(url, text);
             }
             closeLinkContextMenu();
@@ -2183,13 +2174,13 @@
         function removeLink() {
             if (currentLinkElement) {
                 if (confirm('Удалить эту ссылку?')) {
-                    // Заменяем ссылку на её текст
+                
                     const text = currentLinkElement.textContent;
                     const textNode = document.createTextNode(text);
                     
                     currentLinkElement.parentNode.replaceChild(textNode, currentLinkElement);
                     
-                    // Восстанавливаем курсор после текста
+           
                     const range = document.createRange();
                     range.setStartAfter(textNode);
                     range.collapse(true);
@@ -2256,7 +2247,7 @@
                 `Слов: ${totalWords} | Символов: ${totalChars}`;
         }
 
-        // СОХРАНЕНИЕ И ЗАГРУЗКА
+    
         async function saveCurrentNote(isAutoSave = false) {
             if (!currentNoteId || !currentUser) return;
 
@@ -2822,5 +2813,6 @@
     </script>
 </body>
 </html>
+
 
 
